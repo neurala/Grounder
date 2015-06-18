@@ -1,58 +1,43 @@
 /*
- Copyright (C) %{CURRENT_YEAR} by %{AUTHOR} <%{EMAIL}>
-
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License as
- published by the Free Software Foundation; either version 2 of
- the License or (at your option) version 3 or any later version
- accepted by the membership of KDE e.V. (or its successor approved
- by the membership of KDE e.V.), which shall act as a proxy 
- defined in Section 14 of version 3 of the license.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #ifndef GROUNDER_H
 #define GROUNDER_H
 
+#include <KXmlGuiWindow>
 
-#include <QMainWindow>
-
-#include "ui_grounder.h"
-
+class QMediaPlayer;
+class KRecentFilesAction;
 
 /**
- * This class serves as the main window for Grounder.  It handles the
- * menus, toolbars and status bars.
- *
- * @short Main window class
- * @author Your Name <mail@example.com>
- * @version 0.1
  */
-class Grounder : public QMainWindow
+class Grounder : public KXmlGuiWindow
 {
     Q_OBJECT
+
+    KRecentFilesAction* m_recentFiles;
+//	KActorView* m_view;
+	QMediaPlayer* m_player;
+
+	void setupActions();
+	bool queryClose();
+
+	bool openUrl(const QUrl& url);
+	bool saveUrl(const QUrl& url);
+
+	void saveSettings();
+	void loadSettings();
+private slots:
+	void fileOpen();
+	void fileSave();
+	void fileOpenRecent(const QUrl& url);
+	void fileSaveAs();
+
+	void play();
 public:
-    /**
-     * Default Constructor
-     */
     Grounder();
 
-    /**
-     * Default Destructor
-     */
     virtual ~Grounder();
-
-private:
-    // this is the name of the root widget inside our Ui file
-    // you can rename it in designer and then change it here
-    Ui::mainWidget m_ui;
 };
 
 #endif // _GROUNDER_H_

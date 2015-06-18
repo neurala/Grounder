@@ -3,15 +3,23 @@ set( grounder_SRCS
     grounder.cpp
 )
 
-ki18n_wrap_ui(grounder_SRCS grounder.ui)
+kconfig_add_kcfg_files(grounder_SRCS settings.kcfgc)
 
 add_executable( grounder ${grounder_SRCS} )
 
 target_link_libraries( grounder
     Qt5::Widgets
+    Qt5::MultimediaWidgets
     KF5::CoreAddons
+    KF5::WidgetsAddons
+    KF5::ConfigCore
+    KF5::ConfigGui
+    KF5::ConfigWidgets
+    KF5::XmlGui
     KF5::I18n
 )
 
 install( TARGETS grounder ${INSTALL_TARGETS_DEFAULT_ARGS} )
 install( PROGRAMS grounder.desktop  DESTINATION ${XDG_APPS_INSTALL_DIR} )
+install( FILES grounderui.rc DESTINATION ${KXMLGUI_INSTALL_DIR}/grounder)
+install( FILES grounder.kcfg DESTINATION ${KCFG_INSTALL_DIR})
