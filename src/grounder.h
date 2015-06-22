@@ -6,8 +6,13 @@
 
 #include <KXmlGuiWindow>
 
-class QMediaPlayer;
+//class QMediaPlayer;
+
+class QAction;
+class KToolBarLabelAction;
 class KRecentFilesAction;
+
+class KGrounderView;
 
 /**
  */
@@ -16,9 +21,20 @@ class Grounder : public KXmlGuiWindow
     Q_OBJECT
 
     KRecentFilesAction* m_recentFiles;
-//	KActorView* m_view;
-	QMediaPlayer* m_player;
+	KGrounderView* m_view;
+	QVector<QPixmap> m_protocol;
+	QVector<QPair<QPointF, QPointF> > m_ground;
+	uint32_t m_index;
+	QString m_name;
+	bool m_odd;
 
+//	QMediaPlayer* m_player;
+
+	QAction* m_nextFrame;
+	QAction* m_prevFrame;
+	KToolBarLabelAction* m_frame;
+
+	void updateView();
 	void setupActions();
 	bool queryClose();
 
@@ -33,7 +49,10 @@ private slots:
 	void fileOpenRecent(const QUrl& url);
 	void fileSaveAs();
 
-	void play();
+	void nextFrame();
+	void prevFrame();
+//	void play();
+	void addPoint(const QPointF& pt);
 public:
     Grounder();
 

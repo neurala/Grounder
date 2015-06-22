@@ -1,6 +1,7 @@
 set( grounder_SRCS
     main.cpp
     grounder.cpp
+    kGrounderView.cpp
 )
 
 kconfig_add_kcfg_files(grounder_SRCS settings.kcfgc)
