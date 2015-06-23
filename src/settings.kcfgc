@@ -1,0 +1,4 @@
+File=grounder.kcfg
+ClassName=KGrounderConfig
+Singleton=true
+Mutators=true
