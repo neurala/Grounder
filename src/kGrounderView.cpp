@@ -7,6 +7,7 @@ KGrounderView::KGrounderView(QWidget* parent)
              : QLabel(parent)
 {
 	m_pt1 = m_pt2 = 0;
+	setAlignment(Qt::AlignLeft|Qt::AlignTop);
 }
 
 KGrounderView::~KGrounderView()

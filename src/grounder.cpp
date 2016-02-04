@@ -6,6 +6,7 @@
 #include <QAction>
 #include <QDomDocument>
 
+#include <KMessageBox>
 #include <KStandardAction>
 #include <KLocalizedString>
 #include <KActionCollection>
@@ -126,6 +127,11 @@ Grounder::updateView()
 void
 Grounder::addPoint(const QPointF& pt)
 {
+	if(pt.x() > m_protocol[m_index].width() || pt.y() > m_protocol[m_index].height())
+	{
+		KMessageBox::sorry(m_view, i18n("Selected point shall be within the video frame"));
+		return;
+	}
 	if(m_ground[m_index].first.isNull())
 	{
 		m_ground[m_index].first = pt;
