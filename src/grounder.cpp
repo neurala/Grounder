@@ -60,12 +60,12 @@ Grounder::setupActions()
 	m_recentFiles = KStandardAction::openRecent( 0, 0, actionCollection());
 	connect(m_recentFiles, SIGNAL(urlSelected(const QUrl &)),
 	        this, SLOT(fileOpenRecent(const QUrl &)));
-/*
-	QAction* action = actionCollection()->add<QAction>("play", this, SLOT(play()));
-	action->setIcon(QIcon::fromTheme("format-join-node"));
-	actionCollection()->setDefaultShortcut(action, QKeySequence("Ctrl+P"));
-	action->setText(i18n("&Play"));
-*/
+
+	QAction* action = actionCollection()->add<QAction>("clear", this, SLOT(clear()));
+	action->setIcon(QIcon::fromTheme("format-remove-node"));
+	actionCollection()->setDefaultShortcut(action, QKeySequence("Ctrl+D"));
+	action->setText(i18n("&Clear"));
+
 	m_nextFrame = actionCollection()->add<QAction>("next_fr", this, SLOT(nextFrame()));
 	m_nextFrame->setIcon(QIcon::fromTheme("go-next"));
 	m_nextFrame->setText(i18n("Next frame"));
@@ -95,13 +95,33 @@ Grounder::play()
 */
 
 void
+Grounder::clear()
+{
+	m_ground[m_index].first = QPointF();
+	m_ground[m_index].second = QPointF();
+	updateView();
+}
+
+void
 Grounder::nextFrame()
 {
 	if(!m_protocol.size())
 		return;
+
+	QPointF old1 = m_ground[m_index].first;
+	QPointF old2 = m_ground[m_index].second;
+
 	++m_index;
 	if(m_index >= m_protocol.size())
 		m_index = 0;
+	if(m_ground[m_index].first.isNull())
+	{
+		m_ground[m_index].first = old1;
+	}
+	if(m_ground[m_index].second.isNull())
+	{
+		m_ground[m_index].second = old2;
+	}
 	updateView();
 }
 
@@ -110,9 +130,21 @@ Grounder::prevFrame()
 {
 	if(!m_protocol.size())
 		return;
+
+	QPointF old1 = m_ground[m_index].first;
+	QPointF old2 = m_ground[m_index].second;
+
 	if(m_index == 0)
 		m_index = m_protocol.size();
 	--m_index;
+	if(m_ground[m_index].first.isNull())
+	{
+		m_ground[m_index].first = old1;
+	}
+	if(m_ground[m_index].second.isNull())
+	{
+		m_ground[m_index].second = old2;
+	}
 	updateView();
 }
 
@@ -125,13 +157,14 @@ Grounder::updateView()
 }
 
 void
-Grounder::addPoint(const QPointF& pt)
+Grounder::addPoint(const QPointF& originalPt)
 {
-	if(pt.x() > m_protocol[m_index].width() || pt.y() > m_protocol[m_index].height())
-	{
-		KMessageBox::sorry(m_view, i18n("Selected point shall be within the video frame"));
-		return;
-	}
+	float shiftX = float(m_view->width() - m_protocol[m_index].width())/2.0f;
+	float shiftY = float(m_view->height() - m_protocol[m_index].height())/2.0f;
+
+	QPointF pt = QPointF(originalPt.x() - shiftX, originalPt.y() - shiftY);
+	qDebug() << "Adjusted point: " << pt;
+
 	if(m_ground[m_index].first.isNull())
 	{
 		m_ground[m_index].first = pt;

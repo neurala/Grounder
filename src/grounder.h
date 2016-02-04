@@ -52,6 +52,7 @@ private slots:
 	void nextFrame();
 	void prevFrame();
 //	void play();
+	void clear();
 	void addPoint(const QPointF& pt);
 public:
     Grounder();

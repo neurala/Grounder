@@ -6,6 +6,8 @@
 			<Action name="prev_fr" />
 			<Action name="next_fr" />
 			<Merge/>
+			<Separator/>
+			<Action name="clear" />
 		</Menu>
 	</MenuBar>
 	<ToolBar noMerge="1" name="mainToolBar" >
@@ -18,5 +20,6 @@
 		<Action name="frame" />
 		<Action name="next_fr" />
 		<Separator/>
+		<Action name="clear" />
 	</ToolBar>
 </kpartgui>
