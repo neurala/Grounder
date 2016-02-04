@@ -198,12 +198,12 @@ Grounder::fileSaveAs()
 bool
 Grounder::openUrl(const QUrl& url)
 {
-	QStringList path = url.path().split(QRegExp("[\\-\\.]"));
-	qDebug() << "Path:" << path;
-	QStringList baseName = path;
+	QStringList path = url.path().split(QRegExp("[\\.]"));
+	QStringList baseName = url.path().split(QRegExp("[\\-]"));
 	baseName.removeLast();
-	baseName.removeLast();
-	m_name = baseName.join('.');
+	m_name = baseName.join('-');
+
+	qDebug() << "Base file name:" << m_name;
 
 	m_protocol.clear();
 	uint i = 0;
