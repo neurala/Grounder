@@ -159,6 +159,9 @@ Grounder::updateView()
 void
 Grounder::addPoint(const QPointF& originalPt)
 {
+	if(!m_protocol.size())
+		return;
+
 	float shiftX = float(m_view->width() - m_protocol[m_index].width())/2.0f;
 	float shiftY = float(m_view->height() - m_protocol[m_index].height())/2.0f;
 
