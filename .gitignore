@@ -1,0 +1,6 @@
+build
+release
+.directory
+.kdev4
+*.kdev4
+
