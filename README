@@ -16,7 +16,7 @@ Possibly needed:
 kauth-devel
 
 
-How To Build This Application
+How To Build This Application:
 
 cd Grounder
 mkdir build
@@ -30,3 +30,19 @@ where $KDEDIRS points to your KDE installation prefix.
 Note: you can use another build path. Then cd in your build dir and:
 export Grounder_SRC=path_to_Grounder_src
 cmake $Grounder_SRC -DCMAKE_INSTALL_PREFIX=$KDEDIRS -DCMAKE_BUILD_TYPE=Debug
+
+Usage:
+
+Grounder allows to load a sequence of video frames named as
+
+some video-0.jpg
+...
+some video-9797.jpg
+
+residing in the same directory. Number of frames is not limited (except that it is represented as
+uint internally). To load the sequence any file in the sequence shall be selected,
+the system loads all others automatically.
+
+Future:
+
+Looking into loading videos instead of/in addition to sequaences of frames
