@@ -4,12 +4,15 @@ Qt5 and KF5 development versions.
 
 On OpenSuSE 13.2 the required package list is:
 
+gettext-tools
+
 extra-cmake-modules
 kconfig-devel
 kconfigwidgets-devel
 kcoreaddons-devel
-kwidgetaddons-devel
+kwidgetsaddons-devel
 kxmlgui-devel
+ki18n-devel
 kf5-filesystem
 
 Possibly needed:
@@ -25,11 +28,18 @@ cmake -DCMAKE_INSTALL_PREFIX=$KDEDIRS -DCMAKE_BUILD_TYPE=Debug ..
 make
 make install  or  su -c 'make install'  or  sudo make install
 
+IMPORTANT! Note the .. at the end of cmake command. Without it cmake
+will try to find its files in the build directory, which is obviously
+empty...
+
 where $KDEDIRS points to your KDE installation prefix.
 
 Note: you can use another build path. Then cd in your build dir and:
 export Grounder_SRC=path_to_Grounder_src
 cmake $Grounder_SRC -DCMAKE_INSTALL_PREFIX=$KDEDIRS -DCMAKE_BUILD_TYPE=Debug
+
+Note -DCMAKE_INSTALL_PREFIX=$KDEDIRS is optional, if not given the application
+will be installed in /usr/local tree
 
 Usage:
 
