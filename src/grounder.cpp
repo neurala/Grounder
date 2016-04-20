@@ -3,6 +3,12 @@
 
 #include <QApplication>
 #include <QFileDialog>
+/*
+#include <QMediaContent>
+#include <QMediaPlayer>
+#include <QMediaPlaylist>
+#include <QVideoWidget>
+*/
 #include <QAction>
 #include <QDomDocument>
 
@@ -240,6 +246,26 @@ Grounder::fileSaveAs()
 bool
 Grounder::openUrl(const QUrl& url)
 {
+/*
+	QMediaContent vid = QMediaContent(url);
+
+	QMediaPlayer* player = new QMediaPlayer(this);
+
+	player->setMedia(vid);
+
+	QVideoWidget* videoWidget = new QVideoWidget;
+	player->setVideoOutput(videoWidget);
+	if (!player->isVideoAvailable())
+	{
+		qDebug() << "video not available";
+		qDebug() << player->errorString();
+	}
+
+	videoWidget->show();
+//	playlist->setCurrentIndex(1);
+	player->play();
+	return false;
+*/
 	QStringList path = url.path().split(QRegExp("[\\.]"));
 	QStringList baseName = url.path().split(QRegExp("[\\-]"));
 	baseName.removeLast();
@@ -250,11 +276,14 @@ Grounder::openUrl(const QUrl& url)
 	m_protocol.clear();
 	uint i = 0;
 	QPixmap img(m_name + "-" + QString::number(i) + "." + path.last());
+	if(img.isNull())
+	{
+		img = QPixmap(m_name + "-" + QString::number(++i) + "." + path.last());;
+	}
 	while(!img.isNull())
 	{
 		m_protocol.append(img);
-		++i;
-		img = QPixmap(m_name + "-" + QString::number(i) + "." + path.last());
+		img = QPixmap(m_name + "-" + QString::number(++i) + "." + path.last());
 	}
 	m_index = 0;
 	m_ground.resize(m_protocol.size());
