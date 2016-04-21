@@ -4,6 +4,8 @@
 #ifndef GROUNDER_H
 #define GROUNDER_H
 
+#include <QLinkedList>
+
 #include <KXmlGuiWindow>
 
 //class QMediaPlayer;
@@ -22,10 +24,11 @@ class Grounder : public KXmlGuiWindow
 
     KRecentFilesAction* m_recentFiles;
 	KGrounderView* m_view;
-	QVector<QPixmap> m_protocol;
+	QLinkedList<QPixmap> m_protocol;
+	QLinkedList<QPixmap>::const_iterator m_current;
 	QVector<QPair<QPointF, QPointF> > m_ground;
-	uint32_t m_index;
-	QString m_name;
+	uint32_t m_index, m_firstFrame, m_lastFrame, m_listSize;
+	QString m_name, m_extension;
 	bool m_odd;
 
 //	QMediaPlayer* m_player;

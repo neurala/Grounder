@@ -27,6 +27,9 @@ Grounder::Grounder()
         : KXmlGuiWindow()
 {
 	m_index = 0;
+	m_firstFrame = 0;
+	m_lastFrame = 0;
+	m_listSize = 1;
 	m_odd = true;
 	m_view = new KGrounderView(this);
 	setCentralWidget(m_view);
@@ -118,7 +121,17 @@ Grounder::nextFrame()
 	QPointF old2 = m_ground[m_index].second;
 
 	++m_index;
-	if(m_index >= m_protocol.size())
+	++m_current;
+	uint32_t index = m_firstFrame + m_index + m_listSize;
+	while(index > m_lastFrame)
+	{
+		index -= m_lastFrame;
+	}
+	m_protocol.append(QPixmap(m_name + "-" + QString::number(index) + "." + m_extension));
+	qDebug() << "Appending frame: " << index;
+	m_protocol.removeFirst();
+	qDebug() << "Buffer size: " << m_protocol.size();
+	if(m_index >= m_ground.size())
 		m_index = 0;
 	if(m_ground[m_index].first.isNull())
 	{
@@ -141,8 +154,18 @@ Grounder::prevFrame()
 	QPointF old2 = m_ground[m_index].second;
 
 	if(m_index == 0)
-		m_index = m_protocol.size();
+		m_index = m_ground.size();
 	--m_index;
+	--m_current;
+	int32_t index = m_firstFrame + m_index - m_listSize;
+	while(index < int32_t(m_firstFrame))
+	{
+		index += m_lastFrame;
+	}
+	m_protocol.prepend(QPixmap(m_name + "-" + QString::number(index) + "." + m_extension));
+	qDebug() << "Prepending frame: " << index;
+	m_protocol.removeLast();
+	qDebug() << "Buffer size: " << m_protocol.size();
 	if(m_ground[m_index].first.isNull())
 	{
 		m_ground[m_index].first = old1;
@@ -158,7 +181,8 @@ void
 Grounder::updateView()
 {
 	m_frame->setText(i18n("Frame: %1").arg(m_index+1));
-	m_view->setPixmap(m_protocol[m_index]);
+	qDebug() << "iterator: " << *m_current;
+	m_view->setPixmap(*m_current);
 	m_view->setPoints(&m_ground[m_index].first, &m_ground[m_index].second);
 }
 
@@ -168,8 +192,8 @@ Grounder::addPoint(const QPointF& originalPt)
 	if(!m_protocol.size())
 		return;
 
-	float shiftX = float(m_view->width() - m_protocol[m_index].width())/2.0f;
-	float shiftY = float(m_view->height() - m_protocol[m_index].height())/2.0f;
+	float shiftX = float(m_view->width() - m_current->width())/2.0f;
+	float shiftY = float(m_view->height() - m_current->height())/2.0f;
 
 	QPointF pt = QPointF(originalPt.x() - shiftX, originalPt.y() - shiftY);
 	qDebug() << "Adjusted point: " << pt;
@@ -270,23 +294,41 @@ Grounder::openUrl(const QUrl& url)
 	QStringList baseName = url.path().split(QRegExp("[\\-]"));
 	baseName.removeLast();
 	m_name = baseName.join('-');
+	m_extension = path.last();
 
 	qDebug() << "Base file name:" << m_name;
 
 	m_protocol.clear();
 	uint i = 0;
-	QPixmap img(m_name + "-" + QString::number(i) + "." + path.last());
+	m_firstFrame = 0;
+	QPixmap img(m_name + "-" + QString::number(i) + "." + m_extension);
 	if(img.isNull())
 	{
-		img = QPixmap(m_name + "-" + QString::number(++i) + "." + path.last());;
+		img = QPixmap(m_name + "-" + QString::number(++i) + "." + m_extension);
+		m_firstFrame = 1;
 	}
 	while(!img.isNull())
 	{
-		m_protocol.append(img);
-		img = QPixmap(m_name + "-" + QString::number(++i) + "." + path.last());
+		if(m_protocol.size() < m_listSize + 1)
+		{
+			m_protocol.append(img);
+			qDebug() << "Appending frame: " << i;
+		}
+		img = QPixmap(m_name + "-" + QString::number(++i) + "." + m_extension);
 	}
+	m_current = m_protocol.begin();
+	qDebug() << "iterator: " << *m_current;
+	m_lastFrame = i - 1;
+
+	for(i = m_lastFrame; i > m_lastFrame - m_listSize; --i)
+	{
+		img = QPixmap(m_name + "-" + QString::number(i) + "." + m_extension);;
+		m_protocol.prepend(img);
+		qDebug() << "Prepending frame: " << i;
+	}
+
 	m_index = 0;
-	m_ground.resize(m_protocol.size());
+	m_ground.resize(m_lastFrame - m_firstFrame + 1);
 	updateView();
 	return true;
 }
