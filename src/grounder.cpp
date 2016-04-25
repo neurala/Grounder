@@ -329,8 +329,54 @@ Grounder::openUrl(const QUrl& url)
 
 	m_index = 0;
 	m_ground.resize(m_lastFrame - m_firstFrame + 1);
+
+	readGround(QUrl(m_name + ".xml"));
+
 	updateView();
 	return true;
+}
+
+void
+Grounder::readGround(const QUrl& url)
+{
+	QFile ifl(url.path());
+	if(!ifl.open(QIODevice::ReadOnly))
+	{
+		qDebug() << "Could not open ground truth file" << url.path();
+		return;
+	}
+
+	QFile fn(url.path());
+	QDomDocument protocolXML("protocol");
+	protocolXML.setContent(&fn);
+	QDomNodeList frameList = protocolXML.elementsByTagName("frame");
+	qDebug() << "Old ground truth has " << frameList.length() << " frames";
+	for(int i = 0; i < frameList.length(); ++i)
+	{
+		QDomElement frame = frameList.item(i).toElement();
+		if(frame.isNull())
+			continue;
+
+		QDomNodeList pointList = frame.elementsByTagName("point");
+		for(int j = 0; j < pointList.length(); ++j)
+		{
+			if(j > 1)
+			{
+				break;
+			}
+			QDomElement point = pointList.item(j).toElement();
+			if(j)
+			{
+				m_ground[i].second.setX(point.attribute("x", "0").toDouble());
+				m_ground[i].second.setY(point.attribute("y", "0").toDouble());
+			}
+			else
+			{
+				m_ground[i].first.setX(point.attribute("x", "0").toDouble());
+				m_ground[i].first.setY(point.attribute("y", "0").toDouble());
+			}
+		}
+	}
 }
 
 bool

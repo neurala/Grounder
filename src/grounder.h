@@ -43,6 +43,7 @@ class Grounder : public KXmlGuiWindow
 
 	bool openUrl(const QUrl& url);
 	bool saveUrl(const QUrl& url);
+	void readGround(const QUrl& url);
 
 	void saveSettings();
 	void loadSettings();
