@@ -182,7 +182,10 @@ Grounder::updateView()
 {
 	m_frame->setText(i18n("Frame: %1").arg(m_index+1));
 	qDebug() << "iterator: " << *m_current;
+
+	//segfault occurs here:
 	m_view->setPixmap(*m_current);
+
 	m_view->setPoints(&m_ground[m_index].first, &m_ground[m_index].second);
 }
 
@@ -296,7 +299,7 @@ Grounder::openUrl(const QUrl& url)
 	m_name = baseName.join('-');
 	m_extension = path.last();
 
-	qDebug() << "Base file name:" << m_name;
+	 qDebug() << "Base file name:" << m_name;
 
 	m_protocol.clear();
 	uint i = 0;
@@ -315,22 +318,24 @@ Grounder::openUrl(const QUrl& url)
 			qDebug() << "Appending frame: " << i;
 		}
 		img = QPixmap(m_name + "-" + QString::number(++i) + "." + m_extension);
-	}
-	m_current = m_protocol.begin();
-	qDebug() << "iterator: " << *m_current;
-	m_lastFrame = i - 1;
+  }
+  //other segfault here:
+  m_current = m_protocol.begin();
 
-	for(i = m_lastFrame; i > m_lastFrame - m_listSize; --i)
-	{
-		img = QPixmap(m_name + "-" + QString::number(i) + "." + m_extension);;
-		m_protocol.prepend(img);
-		qDebug() << "Prepending frame: " << i;
-	}
+  // qDebug() << "iterator: " << *m_current;
+   m_lastFrame = i - 1;
+  //
+  for(i = m_lastFrame; i > m_lastFrame - m_listSize; --i)
+  {
+  	img = QPixmap(m_name + "-" + QString::number(i) + "." + m_extension);;
+  	m_protocol.prepend(img);
+  	qDebug() << "Prepending frame: " << i;
+  }
 
-	m_index = 0;
-	m_ground.resize(m_lastFrame - m_firstFrame + 1);
+  m_index = 0;
+  m_ground.resize(m_lastFrame - m_firstFrame + 1);
 
-	readGround(QUrl(m_name + ".xml"));
+  readGround(QUrl(m_name + ".xml"));
 
 	updateView();
 	return true;
