@@ -392,38 +392,47 @@ Grounder::saveUrl(const QUrl& url)
 	QTextStream ostream(&ifl);
 	QDomProcessingInstruction pi = protocolXML.createProcessingInstruction("xml version =", "'1.0'");
 	pi.save(ostream, 1);
-	QDomElement doc = protocolXML.createElement("frames");
-	protocolXML.appendChild(doc);
+  QDomElement doc = protocolXML.createElement("doc");
+  protocolXML.appendChild(doc);
+  // parameter header to doc needs to be defined here once support for extra data is added
+  QDomElement frames = protocolXML.createElement("frames");
+  doc.appendChild(frames);
+
+
 	for(int i = 0; i < m_ground.size(); ++i)
 	{
 		QDomElement elt = protocolXML.createElement("frame");
 		elt.setAttribute("index", i);
-		if(!m_ground[i].first.isNull() && !m_ground[i].second.isNull()) // both points
+    QDomElement object = protocolXML.createElement("object");
+    //no support for multiple objects at the moment, id is always 0
+    object.setAttribute("id",0);
+    //no support for non-rects, so no need for multipoint writing
+
+		QDomElement pt1 = protocolXML.createElement("point");
+
+    if(!m_ground[i].first.isNull() && !m_ground[i].second.isNull()) // both points
 		{
-			QDomElement pt1 = protocolXML.createElement("point");
-			QDomElement pt2 = protocolXML.createElement("point");
-			pt1.setAttribute("x", qMin(m_ground[i].first.x(), m_ground[i].second.x()));
-			pt1.setAttribute("y", qMin(m_ground[i].first.y(), m_ground[i].second.y()));
-			pt2.setAttribute("x", qMax(m_ground[i].first.x(), m_ground[i].second.x()));
-			pt2.setAttribute("y", qMax(m_ground[i].first.y(), m_ground[i].second.y()));
-			elt.appendChild(pt1);
-			elt.appendChild(pt2);
+			pt1.setAttribute("x1_coord", qMin(m_ground[i].first.x(), m_ground[i].second.x()));
+			pt1.setAttribute("y1_coord", qMin(m_ground[i].first.y(), m_ground[i].second.y()));
+			pt1.setAttribute("x2_coord", qMax(m_ground[i].first.x(), m_ground[i].second.x()));
+			pt1.setAttribute("y2_coord", qMax(m_ground[i].first.y(), m_ground[i].second.y()));
 		}
 		else if(!m_ground[i].first.isNull())
 		{
-			QDomElement pt1 = protocolXML.createElement("point");
-			pt1.setAttribute("x", m_ground[i].first.x());
-			pt1.setAttribute("y", m_ground[i].first.y());
-			elt.appendChild(pt1);
+			pt1.setAttribute("x1_coord", m_ground[i].first.x());
+			pt1.setAttribute("y1_coord", m_ground[i].first.y());
+
 		}
 		else if(!m_ground[i].second.isNull())
 		{
-			QDomElement pt1 = protocolXML.createElement("point");
-			pt1.setAttribute("x", m_ground[i].second.x());
-			pt1.setAttribute("y", m_ground[i].second.y());
-			elt.appendChild(pt1);
+			pt1.setAttribute("x2_coord", m_ground[i].second.x());
+			pt1.setAttribute("y2_coord", m_ground[i].second.y());
 		}
-		doc.appendChild(elt);
+
+    object.appendChild(pt1);
+    elt.appendChild(object);
+  	frames.appendChild(elt);
+
 	}
 	protocolXML.save(ostream, 1);
 	return true;

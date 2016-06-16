@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 3.0)
 set( grounder_SRCS
     main.cpp
     grounder.cpp
@@ -5,6 +6,10 @@ set( grounder_SRCS
 )
 
 kconfig_add_kcfg_files(grounder_SRCS settings.kcfgc)
+find_package(Qt5Core REQUIRED)
+find_package(Qt5Gui REQUIRED)
+find_package(Qt5Widgets REQUIRED)
+find_package(Qt5Multimedia REQUIRED)
 
 add_executable( grounder ${grounder_SRCS} )
 
