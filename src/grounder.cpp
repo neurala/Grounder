@@ -310,6 +310,12 @@ Grounder::openUrl(const QUrl& url)
 		img = QPixmap(m_name + "-" + QString::number(++i) + "." + m_extension);
 		m_firstFrame = 1;
 	}
+  if(img.isNull())
+	{
+	   qDebug() << "check filename!!";
+     exit(-1);
+	}
+
 	while(!img.isNull())
 	{
 		if(m_protocol.size() < m_listSize + 1)
@@ -319,7 +325,7 @@ Grounder::openUrl(const QUrl& url)
 		}
 		img = QPixmap(m_name + "-" + QString::number(++i) + "." + m_extension);
   }
-  //other segfault here:
+
   m_current = m_protocol.begin();
 
   // qDebug() << "iterator: " << *m_current;
