@@ -3,7 +3,7 @@
 #include <QCommandLineParser>
 #include <KAboutData>
 #include <KLocalizedString>
-
+#include <QTabWidget>
 // application header
 #include "grounder.h"
 
@@ -29,6 +29,8 @@ int main(int argc, char **argv)
 	aboutData.processCommandLine(&parser);
 
 	Grounder *appwindow = new Grounder;
-	appwindow->show();
+    QTabWidget tabs;
+    tabs.addTab(appwindow,"imageGrounder");
+    tabs.show();
 	return application.exec();
 }

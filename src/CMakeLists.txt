@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 set( grounder_SRCS
     main.cpp
     grounder.cpp
+    VideoGrounder.cpp
     kGrounderView.cpp
 )
 
