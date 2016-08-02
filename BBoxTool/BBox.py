@@ -409,7 +409,7 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
         self.mainPanel.bind("<Button-1>", self.mouseClick)
         self.mainPanel.bind("<Motion>", self.mouseMove)
         self.parent.bind("<Escape>", self.cancelBBox)  # press <Escape> to cancel current bbox self.cancelBBox
-        self.mainPanel.grid(row=1, column=1, rowspan=6, sticky=W + N)
+        self.mainPanel.grid(row=1, column=1, rowspan=8, sticky=W + N)
 
         # showing bbox info & delete bbox
         self.lb1 = Label(self.frame, text='Bounding boxes:')
@@ -423,7 +423,7 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
         self.btnClear = Button(self.frame, text='autoloop', command=self.loopToggle)
         self.btnClear.grid(row=5, column=2, sticky=W + E + N)
         self.btnReset = Button(self.frame, text='Reset Trackers', command=self.initTrackers)
-        self.btnReset.grid(row=7, column=2, sticky=W + E + N)
+        self.btnReset.grid(row=6, column=2, sticky=W + E + N)
         self.btninit = Button(self.frame, text='init Trackers', command=self.initTrackers)
         self.btninit.grid(row=7, column=2, sticky=W + E + N)
 
@@ -646,7 +646,7 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
         allobjects = self.currentFrame.findall('object')
         for i in range(0, len(allobjects)):
             allobjects[i].set('idx', str(i))
-            
+
     def initTrackers(self):
         self.trackerInit = True
 
