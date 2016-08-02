@@ -409,7 +409,7 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
         self.mainPanel.bind("<Button-1>", self.mouseClick)
         self.mainPanel.bind("<Motion>", self.mouseMove)
         self.parent.bind("<Escape>", self.cancelBBox)  # press <Escape> to cancel current bbox self.cancelBBox
-        self.mainPanel.grid(row=1, column=1, rowspan=5, sticky=W + N)
+        self.mainPanel.grid(row=1, column=1, rowspan=6, sticky=W + N)
 
         # showing bbox info & delete bbox
         self.lb1 = Label(self.frame, text='Bounding boxes:')
@@ -422,19 +422,21 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
         self.btnClear.grid(row=4, column=2, sticky=W + E + N)
         self.btnClear = Button(self.frame, text='autoloop', command=self.loopToggle)
         self.btnClear.grid(row=5, column=2, sticky=W + E + N)
-        self.btnReset = Button(self.frame, text='Reset Trackers', command=self.resetTrackers)
-        self.btnReset.grid(row=6, column=2, sticky=W + E + N)
+        self.btnReset = Button(self.frame, text='Reset Trackers', command=self.initTrackers)
+        self.btnReset.grid(row=7, column=2, sticky=W + E + N)
+        self.btninit = Button(self.frame, text='init Trackers', command=self.initTrackers)
+        self.btninit.grid(row=7, column=2, sticky=W + E + N)
 
         # bbox label and save
         self.labelentry = Entry(self.frame)
-        self.labelentry.grid(row=7, column=2, sticky=W + E)
+        self.labelentry.grid(row=8, column=2, sticky=W + E)
         self.lablepanel = Frame(self.frame)
-        self.lablepanel.grid(row=7, column=1, columnspan=1, sticky=W + E)
+        self.lablepanel.grid(row=8, column=1, columnspan=1, sticky=W + E)
         self.label = Label(self.lablepanel, text="Label:")
         self.label.pack(side=RIGHT, padx=5, pady=3)
         # control panel for image navigation
         self.ctrPanel = Frame(self.frame)
-        self.ctrPanel.grid(row=7, column=1, columnspan=2, sticky=W + E)
+        self.ctrPanel.grid(row=9, column=1, columnspan=2, sticky=W + E)
         self.prevBtn = Button(self.ctrPanel, text='<< Prev', width=10, command=self.prevFrame)
         self.prevBtn.pack(side=LEFT, padx=5, pady=3)
         self.nextBtn = Button(self.ctrPanel, text='Next >>', width=10, command=self.nextFrame)
@@ -467,15 +469,46 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
         self.parent.bind("<Right>", self.nextFrame)
         self.parent.bind("<Delete>", self.clearBBox)
 
-        self.labelentry.bind("<Left>", lambda: self.prevFrame)
-        self.labelentry.bind("<Right>", self.nextFrame)
-        self.labelentry.bind("<Delete>", self.clearBBox)
         self.trackers = []
         self.videoinput = None
         self.parent.focus_set()
         self.currentImage = None
         self.doLoop = False
         self.jobid = None
+        self.scaleimg = None
+        self.trackerInit = False
+
+        # # linux scroll
+        # self.mainPanel.bind("<Button-4>", self.zoomerP)
+        # self.mainPanel.bind("<Button-5>", self.zoomerM)
+
+    # def zoomerP(self, event):
+    #     self.mainPanel.scale("all", event.x, event.y, 1.1, 1.1)
+    #     self.mainPanel.configure(scrollregion = self.mainPanel.bbox("all"))
+    #     self.redraw(event.x,event.y)
+    #
+    # def zoomerM(self, event):
+    #     self.mainPanel.scale("all", event.x, event.y, 0.9, 0.9)
+    #     self.mainPanel.configure(scrollregion = self.mainPanel.bbox("all"))
+    #     self.redraw(event.x,event.y)
+    #
+    # def redraw(self, x=0, y=0):
+    #     if self.currentImage: self.mainPanel.delete(self.currentImage)
+    #     iw = self.tkimg.width()
+    #     ih = self.tkimg.height()
+    #     # calculate crop rect
+    #     cw, ch = iw / self.mainPanel.size, ih / self.mainPanel.size
+    #     if cw > iw or ch > ih:
+    #         cw = iw
+    #         ch = ih
+    #     # crop it
+    #     _x = int(iw/2 - cw/2)
+    #     _y = int(ih/2 - ch/2)
+    #     tmp = self.tkimg.crop((_x, _y, _x + int(cw), _y + int(ch)))
+    #     size = int(cw * self.mainPanel.scale), int(ch * self.mainPanel.scale)
+    #     # draw
+    #     self.scaleimg = ImageTk.PhotoImage(tmp.resize(size))
+    #     self.currentImage = self.mainPanel.create_image(x, y, image=self.scaleimg)
 
     def loadFile(self, dbg=False):
         self.videoFilePath = filedialog.askopenfilename()
@@ -613,6 +646,9 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
         allobjects = self.currentFrame.findall('object')
         for i in range(0, len(allobjects)):
             allobjects[i].set('idx', str(i))
+            
+    def initTrackers(self):
+        self.trackerInit = True
 
     def mouseClick(self, event):
         if self.STATE['click'] == 0:
@@ -628,7 +664,7 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
             self.listbox.insert(END, '(%d, %d) -> (%d, %d) %s' % (x1, y1, x2, y2, label))
             self.listbox.itemconfig(len(self.bboxIdList) - 1, fg=COLORS[(len(self.bboxIdList) - 1) % len(COLORS)])
             self.addxmlnode(x1, y1, x2, y2, label, idx)
-            if(self.cur ==0):
+            if(self.trackerInit):
                 self.newTracker(x1, y1, x2, y2, label, idx)
 
         self.STATE['click'] = 1 - self.STATE['click']
@@ -690,6 +726,8 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
 
     def prevFrame(self, event=None): #slow, but cv pos frames command isnt working
         self.saveFrame()
+        if self.trackerInit:
+            self.trackerInit = False
         if self.cur > 0:
             self.cur -= 1
             self.videoinput.frameNumber(self.cur+1)
@@ -702,6 +740,8 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
 
     def nextFrame(self, event=None):
         self.saveFrame()
+        if self.trackerInit:
+            self.trackerInit = False
 
         if self.cur < self.total-1:
             self.videoinput.nextFrame()
