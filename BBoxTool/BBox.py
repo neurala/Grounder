@@ -424,19 +424,22 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
         self.btnClear.grid(row=5, column=2, sticky=W + E + N)
         self.btnReset = Button(self.frame, text='Reset Trackers', command=self.initTrackers)
         self.btnReset.grid(row=6, column=2, sticky=W + E + N)
-        self.btninit = Button(self.frame, text='init Trackers', command=self.initTrackers)
+        self.btninit = Button(self.frame, text='new Tracker', command=self.initTrackers)
         self.btninit.grid(row=7, column=2, sticky=W + E + N)
+        self.btnrem = Button(self.frame, text='remove Trackers', command=self.remTrackers)
+        self.btnrem.grid(row=8, column=2, sticky=W + E + N)
+
 
         # bbox label and save
         self.labelentry = Entry(self.frame)
-        self.labelentry.grid(row=8, column=2, sticky=W + E)
+        self.labelentry.grid(row=9, column=2, sticky=W + E)
         self.lablepanel = Frame(self.frame)
-        self.lablepanel.grid(row=8, column=1, columnspan=1, sticky=W + E)
+        self.lablepanel.grid(row=9, column=1, columnspan=1, sticky=W + E)
         self.label = Label(self.lablepanel, text="Label:")
         self.label.pack(side=RIGHT, padx=5, pady=3)
         # control panel for image navigation
         self.ctrPanel = Frame(self.frame)
-        self.ctrPanel.grid(row=9, column=1, columnspan=2, sticky=W + E)
+        self.ctrPanel.grid(row=10, column=1, columnspan=2, sticky=W + E)
         self.prevBtn = Button(self.ctrPanel, text='<< Prev', width=10, command=self.prevFrame)
         self.prevBtn.pack(side=LEFT, padx=5, pady=3)
         self.nextBtn = Button(self.ctrPanel, text='Next >>', width=10, command=self.nextFrame)
@@ -509,11 +512,12 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
     #     # draw
     #     self.scaleimg = ImageTk.PhotoImage(tmp.resize(size))
     #     self.currentImage = self.mainPanel.create_image(x, y, image=self.scaleimg)
-
+    def remTrackers(self):
+        self.trackers = []
     def loadFile(self, dbg=False):
         self.videoFilePath = filedialog.askopenfilename()
         self.videoFile = os.path.basename(self.videoFilePath)
-        self.videoinput = neurala.neuVideoInput(self.videoFilePath, 0)
+        self.videoinput = neurala.NEUVideoInput(self.videoFilePath, 0)
         self.videoinput.scale(1.0)
         self.videoinput.nextFrame()
         print self.videoinput.frameNumber()
@@ -568,7 +572,7 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
             self.listbox.itemconfig(len(self.bboxIdList) - 1, fg=COLORS[(len(self.bboxIdList) - 1) % len(COLORS)])
 
     def newTracker(self, x1, y1, x2, y2, label, idx):
-        tracker = neurala.Tracker(self.videoinput, 0.8, 3.0, 1)
+        tracker = neurala.Tracker(self.videoinput, 0.8, 3.0, 0)
         width = self.videoinput.width()
         height = self.videoinput.height()
         x1f = float(x1/width)
@@ -580,7 +584,7 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
 
     def loadVideo(self):
 
-        ret, videoframe = self.video.read()
+        ret, videoframe =self.video.read()
         cv2image = cv2.cvtColor(videoframe, cv2.COLOR_BGR2RGBA)
         img = Image.fromarray(cv2image)
         self.tkimg = ImageTk.PhotoImage(image=img)
@@ -724,18 +728,14 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
         self.bboxIdList = []
         self.bboxList = []
 
-    def prevFrame(self, event=None): #slow, but cv pos frames command isnt working
+    def prevFrame(self, event=None): 
         self.saveFrame()
         if self.trackerInit:
             self.trackerInit = False
         if self.cur > 0:
             self.cur -= 1
-            self.videoinput.frameNumber(self.cur+1)
-            self.video.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, 0.0)
-            count = 0
-            while count != self.cur:
-                self.video.read()
-                count += 1
+            self.videoinput.frameNumber(self.cur)
+            self.video.set(1, self.cur)
             self.loadVideo()
 
     def nextFrame(self, event=None):
@@ -810,7 +810,7 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
     def loopnext(self, event=None):
         if self.doLoop:
             self.nextFrame()
-            self.jobid = root.after(90, self.loopnext)
+            self.jobid = root.after(10, self.loopnext)
 
 if __name__ == '__main__':
     root = Tk()
