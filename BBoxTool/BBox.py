@@ -405,11 +405,21 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
         self.tree = None
 
         # main panel for labeling
-        self.mainPanel = Canvas(self.frame, cursor='tcross')
+        self.mainPanel = Canvas(self.frame, bd=0, cursor='tcross')
         self.mainPanel.bind("<Button-1>", self.mouseClick)
         self.mainPanel.bind("<Motion>", self.mouseMove)
         self.parent.bind("<Escape>", self.cancelBBox)  # press <Escape> to cancel current bbox self.cancelBBox
-        self.mainPanel.grid(row=1, column=1, rowspan=8, sticky=W + N)
+        self.mainPanel.config(scrollregion=self.mainPanel.bbox(ALL))
+        self.scale = 1.0
+        self.orig_img = None
+        self.img = None
+        self.img_id = None
+        self.mainPanel.bind("<Button 3>", self.grab)
+        self.mainPanel.bind("<B3-Motion>", self.drag)
+        self.mainPanel.bind("<Button-4>", self.zoom)
+        self.mainPanel.bind("<Button-5>", self.zoom)
+
+        self.mainPanel.grid(row=1, column=1, rowspan=8, sticky=N+S+E+W)
 
         # showing bbox info & delete bbox
         self.lb1 = Label(self.frame, text='Bounding boxes:')
@@ -422,7 +432,7 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
         self.btnClear.grid(row=4, column=2, sticky=W + E + N)
         self.btnClear = Button(self.frame, text='autoloop', command=self.loopToggle)
         self.btnClear.grid(row=5, column=2, sticky=W + E + N)
-        self.btnReset = Button(self.frame, text='Reset Trackers', command=self.initTrackers)
+        self.btnReset = Button(self.frame, text='Reset Trackers', command=self.resetTrackers)
         self.btnReset.grid(row=6, column=2, sticky=W + E + N)
         self.btninit = Button(self.frame, text='new Tracker', command=self.initTrackers)
         self.btninit.grid(row=7, column=2, sticky=W + E + N)
@@ -480,38 +490,65 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
         self.jobid = None
         self.scaleimg = None
         self.trackerInit = False
+        self.xoffset=0.0
+        self.yoffset=0.0
 
-        # # linux scroll
-        # self.mainPanel.bind("<Button-4>", self.zoomerP)
-        # self.mainPanel.bind("<Button-5>", self.zoomerM)
+    def grab(self, event):
+        self._y = event.y
+        self._x = event.x
 
-    # def zoomerP(self, event):
-    #     self.mainPanel.scale("all", event.x, event.y, 1.1, 1.1)
-    #     self.mainPanel.configure(scrollregion = self.mainPanel.bbox("all"))
-    #     self.redraw(event.x,event.y)
-    #
-    # def zoomerM(self, event):
-    #     self.mainPanel.scale("all", event.x, event.y, 0.9, 0.9)
-    #     self.mainPanel.configure(scrollregion = self.mainPanel.bbox("all"))
-    #     self.redraw(event.x,event.y)
-    #
-    # def redraw(self, x=0, y=0):
-    #     if self.currentImage: self.mainPanel.delete(self.currentImage)
-    #     iw = self.tkimg.width()
-    #     ih = self.tkimg.height()
-    #     # calculate crop rect
-    #     cw, ch = iw / self.mainPanel.size, ih / self.mainPanel.size
-    #     if cw > iw or ch > ih:
-    #         cw = iw
-    #         ch = ih
-    #     # crop it
-    #     _x = int(iw/2 - cw/2)
-    #     _y = int(ih/2 - ch/2)
-    #     tmp = self.tkimg.crop((_x, _y, _x + int(cw), _y + int(ch)))
-    #     size = int(cw * self.mainPanel.scale), int(ch * self.mainPanel.scale)
-    #     # draw
-    #     self.scaleimg = ImageTk.PhotoImage(tmp.resize(size))
-    #     self.currentImage = self.mainPanel.create_image(x, y, image=self.scaleimg)
+    def drag(self, event):
+
+        if (self._y-event.y < 0):
+            self.yoffset += 10
+            self.mainPanel.move(ALL, 0, 10)
+        elif (self._y-event.y > 0):
+            self.yoffset -= 10
+            self.mainPanel.move(ALL, 0, -10)
+        if (self._x-event.x < 0):
+            self.xoffset += 10
+            self.mainPanel.move(ALL, 10, 0)
+        elif (self._x-event.x > 0):
+            self.xoffset -= 10
+            self.mainPanel.move(ALL, -10, 0)
+
+        if self.img_id:
+            self.mainPanel.delete(self.img_id)
+
+        self.img_id = self.mainPanel.create_image(self.xoffset, self.yoffset, image=self.img, anchor=NW)
+        self.mainPanel.tag_lower(self.img_id)
+
+        self._x = event.x
+        self._y = event.y
+
+    def zoom(self, event):
+
+        self.mainPanel.move(ALL, -self.xoffset, -self.yoffset)
+        if event.num == 4:
+            self.scale *= 2
+            self.mainPanel.scale(ALL, 0, 0, 2, 2)
+        elif event.num == 5:
+            self.scale *= 0.5
+            self.mainPanel.scale(ALL, 0, 0, 0.5, 0.5)
+
+        self.redraw()
+
+    def redraw(self, x=0, y=0):
+        if self.img_id:
+            self.mainPanel.delete(self.img_id)
+        iw, ih = self.orig_img.size
+        print iw
+        print ih
+        print self.scale
+        size = int(iw * self.scale), int(ih * self.scale)
+        print size
+        self.img = ImageTk.PhotoImage(image=self.orig_img.resize(size))
+
+        self.img_id = self.mainPanel.create_image(x, y, image=self.img, anchor=NW)
+        self.mainPanel.tag_lower(self.img_id)
+        self.mainPanel.move(ALL, self.xoffset, self.yoffset)
+
+
     def remTrackers(self):
         self.trackers = []
     def loadFile(self, dbg=False):
@@ -563,9 +600,9 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
             y2 = int(point.get('y2_coord'))
             name = objects.get('id')
             self.bboxList.append((x1, y1, x2, y2, name))
-            tmpId = self.mainPanel.create_rectangle(x1, y1, \
-                                                    x2, y2, \
-                                                    width=2, \
+            tmpId = self.mainPanel.create_rectangle((x1 * self.scale) + self.xoffset, (y1 * self.scale) + self.yoffset,
+                                                    (x2 * self.scale) + self.xoffset, (y2 * self.scale) + self.yoffset,
+                                                    width=2,
                                                     outline=COLORS[(len(self.bboxList) - 1) % len(COLORS)])
             self.bboxIdList.append(tmpId)
             self.listbox.insert(END, '(%d, %d) -> (%d, %d) %s' % (x1, y1, x2, y2, name))
@@ -586,15 +623,19 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
 
         ret, videoframe =self.video.read()
         cv2image = cv2.cvtColor(videoframe, cv2.COLOR_BGR2RGBA)
+
         img = Image.fromarray(cv2image)
+        self.orig_img= img
         self.tkimg = ImageTk.PhotoImage(image=img)
         if self.currentImage != None:
             self.mainPanel.delete(self.currentImage)
         self.mainPanel.config(width=max(self.tkimg.width(), 400), height=max(self.tkimg.height(), 400))
-        self.currentImage = self.mainPanel.create_image(0, 0, image=self.tkimg, anchor=NW)
+     #   self.currentImage = self.mainPanel.create_image(0, 0, image=self.tkimg, anchor=NW)
         self.progLabel.config(text="%04d/%04d" % (self.cur, self.total))
         self.reset()
+        self.redraw()
         self.readxml()
+
 
     def newXmlFrame(self):
         newxmlframe = ET.SubElement(self.xmlframes, 'frame')
@@ -660,6 +701,14 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
         else:
             x1, x2 = min(self.STATE['x'], event.x), max(self.STATE['x'], event.x)
             y1, y2 = min(self.STATE['y'], event.y), max(self.STATE['y'], event.y)
+            x1 -= self.xoffset
+            x2 -= self.xoffset
+            y1 -= self.yoffset
+            y2 -= self.yoffset
+            x1 /= self.scale
+            x2 /= self.scale
+            y1 /= self.scale
+            y2 /= self.scale
             label = self.labelentry.get()
             self.bboxIdList.append(self.bboxId)
             idx = len(self.bboxIdList) - 1
@@ -667,7 +716,7 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
             self.bboxId = None
             self.listbox.insert(END, '(%d, %d) -> (%d, %d) %s' % (x1, y1, x2, y2, label))
             self.listbox.itemconfig(len(self.bboxIdList) - 1, fg=COLORS[(len(self.bboxIdList) - 1) % len(COLORS)])
-            self.addxmlnode(x1, y1, x2, y2, label, idx)
+            self.addxmlnode(int(x1), int(y1), int(x2), int(y2), label, idx)
             if(self.trackerInit):
                 self.newTracker(x1, y1, x2, y2, label, idx)
 
@@ -728,7 +777,7 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
         self.bboxIdList = []
         self.bboxList = []
 
-    def prevFrame(self, event=None): 
+    def prevFrame(self, event=None):
         self.saveFrame()
         if self.trackerInit:
             self.trackerInit = False
@@ -749,28 +798,26 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
             self.loadVideo()
             if len(self.currentFrame.findall('object')) == 0:
                 #prevframe = self.xmlframes.find('./frame[@index="' + str(self.cur - 1) + '"]')
-
-                width = self.tkimg.width()
-                height = self.tkimg.height()
-                for elements in self.trackers:
-                    bbox = elements[0].trackFrame()
-                    x1 = int(bbox[1])
-                    y2 = int(bbox[2])
-                    x2 = int(bbox[3])
-                    y1 = int(bbox[4])
-                    name = elements[1]
-                    idx = elements[2]
-                    self.bboxList.append((x1, y1, x2, y2, name))
-                    tmpId = self.mainPanel.create_rectangle(x1, y1, \
-                                                            x2, y2, \
-                                                            width=2, \
-                                                            outline=COLORS[(len(self.bboxList) - 1) % len(COLORS)])
-                    self.bboxIdList.append(tmpId)
-                    self.listbox.insert(END, '(%d, %d) -> (%d, %d) %s' % (x1, y1, x2, y2, name))
-                    self.listbox.itemconfig(len(self.bboxIdList) - 1,
-                                            fg=COLORS[(len(self.bboxIdList) - 1) % len(COLORS)])
-                    self.addxmlnode(x1, y1, x2, y2, name, idx)
-                    print self.videoinput.frameNumber()
+                if len(self.trackers) >0:
+                    for elements in self.trackers:
+                        bbox = elements[0].trackFrame()
+                        x1 = int(bbox[1])
+                        y2 = int(bbox[2])
+                        x2 = int(bbox[3])
+                        y1 = int(bbox[4])
+                        name = elements[1]
+                        idx = elements[2]
+                        self.bboxList.append((x1, y1, x2, y2, name))
+                        tmpId = self.mainPanel.create_rectangle((x1*self.scale)+self.xoffset, (y1*self.scale)+self.yoffset, \
+                                                                (x2*self.scale)+self.xoffset, (y2*self.scale)+self.yoffset, \
+                                                                width=2, \
+                                                                outline=COLORS[(len(self.bboxList) - 1) % len(COLORS)])
+                        self.bboxIdList.append(tmpId)
+                        self.listbox.insert(END, '(%d, %d) -> (%d, %d) %s' % (x1, y1, x2, y2, name))
+                        self.listbox.itemconfig(len(self.bboxIdList) - 1,
+                                                fg=COLORS[(len(self.bboxIdList) - 1) % len(COLORS)])
+                        self.addxmlnode(x1, y1, x2, y2, name, idx)
+        print self.videoinput.frameNumber()
 
     def gotoFrame(self):
         idx = int(self.idxEntry.get())
@@ -813,6 +860,8 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
             self.jobid = root.after(10, self.loopnext)
 
 if __name__ == '__main__':
+
+
     root = Tk()
     root.title("Tabs")
     bar = TabBar(root, "Image Grounding")
