@@ -31,8 +31,8 @@ class LabelTool():
         self.parent = master
         self.parent.title("LabelTool")
         self.frame = Frame(self.parent)
-        self.frame.pack(fill=BOTH, expand=1)
-        self.parent.resizable(width = FALSE, height = FALSE)
+        self.frame.pack(fill=BOTH, expand=True)
+        self.parent.resizable(width = True, height = True)
 
         # initialize global state
         self.imageDir = ''
@@ -46,6 +46,7 @@ class LabelTool():
         self.imagename = ''
         self.labelfilename = ''
         self.tkimg = None
+        self.classlist = []
 
         # initialize mouse state
         self.STATE = {}
@@ -77,12 +78,10 @@ class LabelTool():
         self.orig_img = None
         self.img = None
         self.img_id = None
-        self.mainPanel.bind("<Button 3>", self.grab)
-        self.mainPanel.bind("<B3-Motion>", self.drag)
         self.mainPanel.bind("<Button-4>", self.zoom)
         self.mainPanel.bind("<Button-5>", self.zoom)
 
-        self.mainPanel.grid(row=1, column=1, rowspan=8, sticky=N + S + E + W)
+        self.mainPanel.grid(row=1, column=1, rowspan=8, sticky=N+W)
 
         # showing bbox info & delete bbox
         self.lb1 = Label(self.frame, text = 'Bounding boxes:')
@@ -95,8 +94,9 @@ class LabelTool():
         self.btnClear.grid(row = 4, column = 2, sticky = W+E+N)
 
         #bbox label and save
-        self.labelentry = Entry(self.frame)
+        self.labelentry = Button(self.frame, text= 'define classes', command = self.classdefine)
         self.labelentry.grid(row=6, column=2, sticky=W + E)
+        self.labelentry.config(state = DISABLED)
 
         # control panel for image navigation
         self.ctrPanel = Frame(self.frame)
@@ -119,7 +119,7 @@ class LabelTool():
         self.scaleimg = None
         self.currentImage = None
         self.currentLabel = 0
-
+        self.parent.focus_set()
         # display mouse position
         self.disp = Label(self.ctrPanel, text='')
         self.disp.pack(side = RIGHT)
@@ -129,6 +129,7 @@ class LabelTool():
 
         self.parent.bind("<Left>", self.prevImage)
         self.parent.bind("<Right>", self.nextImage)
+        self.top = None
 
     def selectLabel(self, event):
 
@@ -169,6 +170,8 @@ class LabelTool():
             os.mkdir(self.outDir)
 
         self.loadImage()
+        self.labelentry.config(state=NORMAL)
+        self.ldBtn.config(state=DISABLED)
         print '%d images loaded from %s' %(self.total, os.path.basename(folderPath))
         print ' Annotations will be saved to: %s' %(self.outDir)
 
@@ -182,20 +185,25 @@ class LabelTool():
                 for row in reader:
                     print str(self.tkimg.width())
                     self.bboxList.append(row)
-                    tmpId = self.mainPanel.create_rectangle(int(float(row[1])* self.tkimg.width()), int(float(row[2])* self.tkimg.height()),
-                                                            int(float(row[3])* self.tkimg.width()), int(float(row[4])* self.tkimg.height()),
-                                                            width=2,
-                                                            outline=COLORS[int(row[0])])
+                    x1 = int(float(row[1])* self.tkimg.width())
+                    y1 = int(float(row[2])* self.tkimg.height())
+                    x2 =int(float(row[3])* self.tkimg.width())
+                    y2 = int(float(row[4])* self.tkimg.height())
+                    tmpId = self.mainPanel.create_rectangle(x1, y1, x2, y2, width=2, outline=COLORS[int(row[0])])
                     self.bboxIdList.append(tmpId)
                     self.listbox.insert(END, '(%f, %f) -> (%f, %f)' % (float(row[1]), float(row[2]), float(row[3]), float(row[4])))
                     self.listbox.itemconfig(len(self.bboxIdList) - 1,
                                             fg=COLORS[int(row[0])])
+                self.mainPanel.scale(ALL, 0, 0, self.scale, self.scale)
+                self.redraw()
 
     def loadImage(self):
         # load image
         imagepath = self.imageList[self.cur - 1]
+
         self.img = Image.open(imagepath)
         self.tkimg = ImageTk.PhotoImage(self.img)
+        self.orig_img = self.img
         self.mainPanel.config(width = max(self.tkimg.width(), 400), height = max(self.tkimg.height(), 400))
         self.mainPanel.create_image(0, 0, image = self.tkimg, anchor=NW)
         self.progLabel.config(text = "%04d/%04d" %(self.cur, self.total))
@@ -268,9 +276,9 @@ class LabelTool():
         print self.scale
         size = int(iw * self.scale), int(ih * self.scale)
         print size
-        self.img = ImageTk.PhotoImage(image=self.orig_img.resize(size))
+        self.tkimg = ImageTk.PhotoImage(image=self.orig_img.resize(size))
 
-        self.img_id = self.mainPanel.create_image(x, y, image=self.img, anchor=NW)
+        self.img_id = self.mainPanel.create_image(x, y, image=self.tkimg, anchor=NW)
         self.mainPanel.tag_lower(self.img_id)
         self.mainPanel.move(ALL, self.xoffset, self.yoffset)
 
@@ -280,19 +288,18 @@ class LabelTool():
         else:
             x1, x2 = min(self.STATE['x'], event.x), max(self.STATE['x'], event.x)
             y1, y2 = min(self.STATE['y'], event.y), max(self.STATE['y'], event.y)
-            x1 -= self.xoffset
-            x2 -= self.xoffset
-            y1 -= self.yoffset
-            y2 -= self.yoffset
-            x1 /= self.scale
-            x2 /= self.scale
-            y1 /= self.scale
-            y2 /= self.scale
-            label = self.labelentry.get()
+            # x1 -= self.xoffset
+            # x2 -= self.xoffset
+            # y1 -= self.yoffset
+            # y2 -= self.yoffset
+            # x1 /= self.scale
+            # x2 /= self.scale
+            # y1 /= self.scale
+            # y2 /= self.scale
             self.bboxIdList.append(self.bboxId)
             self.bboxList.append((self.currentLabel, float(x1/self.tkimg.width()), float(y1/self.tkimg.height()), float(x2/self.tkimg.width()), float(y2/self.tkimg.height())))
             self.bboxId = None
-            self.listbox.insert(END, '(%d, %d) -> (%d, %d) %s' % (x1, y1, x2, y2, label))
+            self.listbox.insert(END, '(%d, %d) -> (%d, %d)' % (x1, y1, x2, y2))
             self.listbox.itemconfig(len(self.bboxIdList) - 1, fg=COLORS[self.currentLabel])
 
         self.STATE['click'] = 1 - self.STATE['click']
@@ -326,7 +333,6 @@ class LabelTool():
         if len(sel) != 1 :
             return
         idx = int(sel[0])
-        self.remxmlnode(idx)
         self.mainPanel.delete(self.bboxIdList[idx])
         self.bboxIdList.pop(idx)
         self.bboxList.pop(idx)
@@ -357,8 +363,56 @@ class LabelTool():
             self.saveImage()
             self.cur = idx
             self.loadImage()
+    def classdefine(self):
+        self.top = Toplevel()
+        self.top.title("Define Classes")
 
+        lbl1 = Entry(self.top)
+        lbl1.grid(row=1, column=2, sticky=W + E)
+        self.classlist.append(lbl1)
+        name1 = Label(self.top,text="class 1:")
+        name1.grid(row=1, column=1, sticky=W + E)
+        lbl2 = Entry(self.top)
+        lbl2.grid(row=2, column=2, sticky=W + E)
+        self.classlist.append(lbl2)
+        name2 = Label(self.top,text="class 2:")
+        name2.grid(row=2, column=1, sticky=W + E)
+        lbl3 = Entry(self.top)
+        lbl3.grid(row=3, column=2, sticky=W + E)
+        self.classlist.append(lbl3)
+        name3 = Label(self.top,text="class 3:")
+        name3.grid(row=3, column=1, sticky=W + E)
+        lbl4 = Entry(self.top)
+        lbl4.grid(row=4, column=2, sticky=W + E)
+        self.classlist.append(lbl4)
+        name4 = Label(self.top,text="class 4:")
+        name4.grid(row=4, column=1, sticky=W + E)
+        lbl5 = Entry(self.top)
+        lbl5.grid(row=5, column=2, sticky=W + E)
+        self.classlist.append(lbl5)
+        name5 = Label(self.top,text="class 5:")
+        name5.grid(row=5, column=1, sticky=W + E)
+        lbl6 = Entry(self.top)
+        lbl6.grid(row=6, column=2, sticky=W + E)
+        self.classlist.append(lbl6)
+        name6 = Label(self.top,text="class 6:")
+        name6.grid(row=6, column=1, sticky=W + E)
+        lbl7 = Entry(self.top)
+        lbl7.grid(row=7, column=2, sticky=W + E)
+        self.classlist.append(lbl7)
+        name7 = Label(self.top,text="class 7:")
+        name7.grid(row=7, column=1, sticky=W + E)
 
+        button = Button(self.top, text="Save", command=self.createlabels)
+        button.grid(row=8,column=2, sticky=N+S+E+W)
+    def createlabels(self):
+        labelfile = os.path.join(self.outDir, "labels.txt")
+        with open(labelfile, 'w') as f:
+            for labels in self.classlist:
+                f.write(str(labels.get()))
+                f.write('\n')
+            f.close()
+        self.top.destroy()
 
 if __name__ == '__main__':
     root = Tk()
