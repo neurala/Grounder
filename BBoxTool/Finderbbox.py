@@ -27,6 +27,7 @@ SIZE = 256, 256
 
 class LabelTool():
     def __init__(self, master):
+
         # set up the main frame
         self.parent = master
         self.parent.title("LabelTool")
@@ -72,7 +73,7 @@ class LabelTool():
         self.mainPanel.bind("<Button-1>", self.mouseClick)
         self.mainPanel.bind("<Motion>", self.mouseMove)
         self.parent.bind("<Escape>", self.cancelBBox)  # press <Escape> to cancel current bbox self.cancelBBox
-        self.parent.bind("<Key>", self.selectLabel)
+        self.parent.bind("<Key>", self.hotkeys)
         self.mainPanel.config(scrollregion=self.mainPanel.bbox(ALL))
         self.scale = 1.0
         self.orig_img = None
@@ -94,13 +95,17 @@ class LabelTool():
         self.btnClear.grid(row = 4, column = 2, sticky = W+E+N)
 
         #bbox label and save
-        self.labelentry = Button(self.frame, text= 'define classes', command = self.classdefine)
+        self.labelentry = Button(self.frame, text= 'Define Classes', command = self.classdefine)
         self.labelentry.grid(row=6, column=2, sticky=W + E)
         self.labelentry.config(state = DISABLED)
 
+        #help button
+        self.help = Button(self.frame, text='help', command= self.showhelp)
+        self.help.grid(row=7, column=2, sticky=W + E)
+
         # control panel for image navigation
         self.ctrPanel = Frame(self.frame)
-        self.ctrPanel.grid(row = 7, column = 1, columnspan = 2, sticky = W+E)
+        self.ctrPanel.grid(row = 8, column = 1, columnspan = 2, sticky = W+E)
         self.prevBtn = Button(self.ctrPanel, text='<< Prev', width = 10, command = self.prevImage)
         self.prevBtn.pack(side = LEFT, padx = 5, pady = 3)
         self.nextBtn = Button(self.ctrPanel, text='Next >>', width = 10, command = self.nextImage)
@@ -131,7 +136,28 @@ class LabelTool():
         self.parent.bind("<Right>", self.nextImage)
         self.top = None
 
-    def selectLabel(self, event):
+    def showhelp(self):
+        helpview = Toplevel()
+        helpview.title("Finder Ground Truthing Utility:")
+        instructions = "Usage \n" \
+                       "To ground a dataset:\n" \
+                       "1. Click on load directory\n" \
+                       "2. Navigate to the desired dataset directory. Ensure that you have entered the target directory instead of highlighting it\n" \
+                       "3. Once directory is loaded, the first image will appear\n" \
+                       "4. Click on 'Define Classes' and enter the class labels you wish to use. click 'save' once done\n" \
+                       "5. Use the number keys to cycle between classes and draw bounding boxes on the image by left clicking to place the top left and bottom right corners\n" \
+                       "6. Once done with a given frame, use the 'Next' or hotkeys to automatically save and move on to the next image in the set\n\n" \
+                       "HOTKEYS:\n" \
+                       "'a' or left = prev frame\n" \
+                       "'d' or right = next frame\n" \
+                       "'z' = undo\n" \
+                       "'c' = clear\n" \
+                       "1-7 = switch classes\n" \
+                       "'s' = manual save\n"
+        text = Message(helpview, text=instructions)
+        text.pack()
+
+    def hotkeys(self, event):
 
         if event.char == "1":
             self.currentLabel = 0
@@ -147,6 +173,16 @@ class LabelTool():
             self.currentLabel = 5
         elif event.char == "7":
             self.currentLabel = 6
+        elif event.char == "c":
+            self.clearBBox()
+        elif event.char == "a":
+            self.prevImage()
+        elif event.char == "d":
+            self.nextImage()
+        elif event.char == "z":
+            self.delBBox(True)
+        elif event.char == 's':
+            self.saveImage()
 
     def loadDir(self, dbg=False):
 
@@ -327,11 +363,18 @@ class LabelTool():
                 self.bboxId = None
                 self.STATE['click'] = 0
 
-    def delBBox(self):
-        sel = self.listbox.curselection()
-        if len(sel) != 1 :
-            return
-        idx = int(sel[0])
+    def delBBox(self,last = False):
+        if last:
+            sel = len(self.bboxList)-1
+            if sel <0:
+                return
+            idx=sel
+        else:
+            sel = self.listbox.curselection()
+            if len(sel) != 1:
+                return
+            idx = int(sel[0])
+
         self.mainPanel.delete(self.bboxIdList[idx])
         self.bboxIdList.pop(idx)
         self.bboxList.pop(idx)
