@@ -168,10 +168,9 @@ class LabelTool():
         self.outDir = os.path.join(r'%s' %(self.imageDir),'Labels', )
         if not os.path.exists(self.outDir):
             os.mkdir(self.outDir)
-
+        self.classlist = []
         self.loadImage()
         self.labelentry.config(state=NORMAL)
-        self.ldBtn.config(state=DISABLED)
         print '%d images loaded from %s' %(self.total, os.path.basename(folderPath))
         print ' Annotations will be saved to: %s' %(self.outDir)
 
