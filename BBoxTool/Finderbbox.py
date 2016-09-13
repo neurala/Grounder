@@ -1,10 +1,11 @@
 #-------------------------------------------------------------------------------
 # Name:        Object bounding box label tool
-# Purpose:     Label object bboxes for ground truth data
-# Author:      Qiushi
-# Created:     06/06/2014
-# Last updated by: Lucas Neves
-# Last updated: 07/04/2016
+# Purpose:     Label object bboxes for Finder ground truth data
+# Author:      Lucas
+# Company:     Neurala Inc.
+# Created:     9/01/2016
+# Last updated by: Lucas
+# Last updated: 9/09/2016
 #
 #-------------------------------------------------------------------------------
 from __future__ import division
@@ -63,49 +64,48 @@ class LabelTool():
         self.tree = None
 
         # ----------------- GUI stuff ---------------------
-        # dir entry & load
-        # dir entry & load
-        self.ldBtn = Button(self.frame, text="Load Directory", command=self.loadDir)  # command
-        self.ldBtn.grid(row=5, column=2, sticky=W + E)
 
         # main panel for labeling
         self.mainPanel = Canvas(self.frame, bd=0, cursor='tcross')
-        self.mainPanel.bind("<Button-1>", self.mouseClick)
-        self.mainPanel.bind("<Motion>", self.mouseMove)
-        self.parent.bind("<Escape>", self.cancelBBox)  # press <Escape> to cancel current bbox self.cancelBBox
-        self.parent.bind("<Key>", self.hotkeys)
-        self.mainPanel.config(scrollregion=self.mainPanel.bbox(ALL))
-        self.scale = 1.0
-        self.orig_img = None
-        self.img = None
-        self.img_id = None
-        self.mainPanel.bind("<Button-4>", self.zoom)
-        self.mainPanel.bind("<Button-5>", self.zoom)
 
-        self.mainPanel.grid(row=1, column=1, rowspan=8, sticky=N+W)
+
+        self.mainPanel.grid(row=1, column=1, rowspan=9, sticky=N+W)
 
         # showing bbox info & delete bbox
         self.lb1 = Label(self.frame, text = 'Bounding boxes:')
         self.lb1.grid(row = 1, column = 2,  sticky = W+N)
-        self.listbox = Listbox(self.frame, width = 22, height = 12)
+        self.listbox = Listbox(self.frame, width = 24, height = 12)
         self.listbox.grid(row = 2, column = 2, sticky = N)
-        self.btnDel = Button(self.frame, text = 'Delete', command = self.delBBox)
-        self.btnDel.grid(row = 3, column = 2, sticky = W+E+N)
-        self.btnClear = Button(self.frame, text = 'ClearAll', command = self.clearBBox)
-        self.btnClear.grid(row = 4, column = 2, sticky = W+E+N)
+        #help button
+        self.help = Button(self.frame, text='1. Getting Started', command= self.showhelp)
+        self.help.grid(row=3, column=2, sticky=W+E+N+S)
+        # dir entry & load
+        self.ldBtn = Button(self.frame, text="2. Load Directory", command=self.loadDir)  # command
+        self.ldBtn.grid(row=4, column=2, sticky=W+E+N)
 
         #bbox label and save
-        self.labelentry = Button(self.frame, text= 'Define Classes', command = self.classdefine)
-        self.labelentry.grid(row=6, column=2, sticky=W + E)
+        self.labelentry = Button(self.frame, text= '3. Enter Labels', command = self.classdefine)
+        self.labelentry.grid(row=5, column=2, sticky=W+E+N+S)
         self.labelentry.config(state = DISABLED)
 
-        #help button
-        self.help = Button(self.frame, text='help', command= self.showhelp)
-        self.help.grid(row=7, column=2, sticky=W + E)
+        self.undo = Button(self.frame, text= 'Undo', command = self.delBBox(True))
+        self.undo.grid(row=6, column=2, sticky=W+E+N+S)
+
+        self.btnDel = Button(self.frame, text = 'Delete Selected', command = self.delBBox)
+        self.btnDel.grid(row = 7, column = 2, sticky = W+E+S+N)
+        self.btnClear = Button(self.frame, text = 'Clear All', command = self.clearBBox)
+        self.btnClear.grid(row = 8, column = 2, sticky = W+E+S+N)
+
+        self.scale = 1.0
+        self.orig_img = None
+        self.img = None
+        self.img_id = None
+
+
 
         # control panel for image navigation
         self.ctrPanel = Frame(self.frame)
-        self.ctrPanel.grid(row = 8, column = 1, columnspan = 2, sticky = W+E)
+        self.ctrPanel.grid(row = 9, column = 1, columnspan = 2, sticky = W+E)
         self.prevBtn = Button(self.ctrPanel, text='<< Prev', width = 10, command = self.prevImage)
         self.prevBtn.pack(side = LEFT, padx = 5, pady = 3)
         self.nextBtn = Button(self.ctrPanel, text='Next >>', width = 10, command = self.nextImage)
@@ -135,16 +135,23 @@ class LabelTool():
         self.parent.bind("<Left>", self.prevImage)
         self.parent.bind("<Right>", self.nextImage)
         self.top = None
+        self.splash()
+        self.showhelp()
+
+    def splash(self):
+        raw_img = Image.open("./Images/001/test.JPEG") #SPLASH SCREEN SOURCE GOES HERE
+        self.tkimg = ImageTk.PhotoImage(raw_img)
+        self.mainPanel.config(width=max(self.tkimg.width(), 400), height=max(self.tkimg.height(), 400))
+        self.mainPanel.create_image(0, 0, image=self.tkimg, anchor=NW)
 
     def showhelp(self):
         helpview = Toplevel()
         helpview.title("Finder Ground Truthing Utility:")
-        instructions = "Usage \n" \
-                       "To ground a dataset:\n" \
+        instructions = "How to Use this Utility: \n" \
                        "1. Click on load directory\n" \
-                       "2. Navigate to the desired dataset directory. Ensure that you have entered the target directory instead of highlighting it\n" \
+                       "2. Navigate to the desired dataset directory and select any file within\n" \
                        "3. Once directory is loaded, the first image will appear\n" \
-                       "4. Click on 'Define Classes' and enter the class labels you wish to use. click 'save' once done\n" \
+                       "4. Click on 'Enter Labels' and enter the labels you wish to use. click 'save' once done\n" \
                        "5. Use the number keys to cycle between classes and draw bounding boxes on the image by left clicking to place the top left and bottom right corners\n" \
                        "6. Once done with a given frame, use the 'Next' or hotkeys to automatically save and move on to the next image in the set\n\n" \
                        "HOTKEYS:\n" \
@@ -152,7 +159,7 @@ class LabelTool():
                        "'d' or right = next frame\n" \
                        "'z' = undo\n" \
                        "'c' = clear\n" \
-                       "1-7 = switch classes\n" \
+                       "1-7 = switch labels\n" \
                        "'s' = manual save\n"
         text = Message(helpview, text=instructions)
         text.pack()
@@ -186,7 +193,7 @@ class LabelTool():
 
     def loadDir(self, dbg=False):
 
-        folderPath = filedialog.askdirectory()
+        folderPath = os.path.dirname(os.path.realpath(filedialog.askopenfilename(filetypes=[('jpeg','.jpg')])))
 
         # get image list
         self.imageDir = folderPath
@@ -207,6 +214,17 @@ class LabelTool():
         self.classlist = []
         self.loadImage()
         self.labelentry.config(state=NORMAL)
+
+        self.mainPanel.bind("<Button-1>", self.mouseClick)
+        self.mainPanel.bind("<ButtonRelease-1>", self.mouseRelease)
+        self.mainPanel.bind("<Motion>", self.mouseMove)
+        self.parent.bind("<Escape>", self.cancelBBox)  # press <Escape> to cancel current bbox self.cancelBBox
+        self.parent.bind("<Key>", self.hotkeys)
+        self.mainPanel.config(scrollregion=self.mainPanel.bbox(ALL))
+
+        self.mainPanel.bind("<Button-4>", self.zoom)
+        self.mainPanel.bind("<Button-5>", self.zoom)
+
         print '%d images loaded from %s' %(self.total, os.path.basename(folderPath))
         print ' Annotations will be saved to: %s' %(self.outDir)
 
@@ -316,28 +334,31 @@ class LabelTool():
         self.img_id = self.mainPanel.create_image(x, y, image=self.tkimg, anchor=NW)
         self.mainPanel.tag_lower(self.img_id)
         self.mainPanel.move(ALL, self.xoffset, self.yoffset)
+    def mouseRelease(self,event):
+        x1, x2 = min(self.STATE['x'], event.x), max(self.STATE['x'], event.x)
+        y1, y2 = min(self.STATE['y'], event.y), max(self.STATE['y'], event.y)
+        # x1 -= self.xoffset
+        # x2 -= self.xoffset
+        # y1 -= self.yoffset
+        # y2 -= self.yoffset
+        # x1 /= self.scale
+        # x2 /= self.scale
+        # y1 /= self.scale
+        # y2 /= self.scale
+        self.mainPanel.itemconfig(self.bboxId, dash=1)
+        self.bboxIdList.append(self.bboxId)
+        self.bboxList.append((self.currentLabel, float(x1 / self.tkimg.width()), float(y1 / self.tkimg.height()),
+                              float(x2 / self.tkimg.width()), float(y2 / self.tkimg.height())))
+
+        self.bboxId = None
+        self.listbox.insert(END, '(%d, %d) -> (%d, %d)' % (x1, y1, x2, y2))
+        self.listbox.itemconfig(len(self.bboxIdList) - 1, fg=COLORS[self.currentLabel])
+        self.STATE['click']=0
 
     def mouseClick(self, event):
         if self.STATE['click'] == 0:
             self.STATE['x'], self.STATE['y'] = event.x, event.y
-        else:
-            x1, x2 = min(self.STATE['x'], event.x), max(self.STATE['x'], event.x)
-            y1, y2 = min(self.STATE['y'], event.y), max(self.STATE['y'], event.y)
-            # x1 -= self.xoffset
-            # x2 -= self.xoffset
-            # y1 -= self.yoffset
-            # y2 -= self.yoffset
-            # x1 /= self.scale
-            # x2 /= self.scale
-            # y1 /= self.scale
-            # y2 /= self.scale
-            self.bboxIdList.append(self.bboxId)
-            self.bboxList.append((self.currentLabel, float(x1/self.tkimg.width()), float(y1/self.tkimg.height()), float(x2/self.tkimg.width()), float(y2/self.tkimg.height())))
-            self.bboxId = None
-            self.listbox.insert(END, '(%d, %d) -> (%d, %d)' % (x1, y1, x2, y2))
-            self.listbox.itemconfig(len(self.bboxIdList) - 1, fg=COLORS[self.currentLabel])
-
-        self.STATE['click'] = 1 - self.STATE['click']
+            self.STATE['click'] =1
 
     def mouseMove(self, event):
         self.disp.config(text = 'x: %d, y: %d' %(event.x, event.y))
@@ -354,7 +375,8 @@ class LabelTool():
             self.bboxId = self.mainPanel.create_rectangle(self.STATE['x'], self.STATE['y'], \
                                                             event.x, event.y, \
                                                             width = 2, \
-                                                            outline = COLORS[self.currentLabel])
+                                                            outline = COLORS[self.currentLabel],dash=(2, 4))
+
 
     def cancelBBox(self, event):
         if 1 == self.STATE['click']:
