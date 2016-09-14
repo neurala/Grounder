@@ -146,7 +146,7 @@ class LabelTool():
         self.showhelp()
 
     def splash(self):
-        raw_img = Image.open("./Images/001/test.JPEG") #SPLASH SCREEN SOURCE GOES HERE
+        raw_img = Image.open("./Images/001/test.jpeg") #SPLASH SCREEN SOURCE GOES HERE
         self.tkimg = ImageTk.PhotoImage(raw_img)
         self.mainPanel.config(width=max(self.tkimg.width(), 400), height=max(self.tkimg.height(), 400))
         self.mainPanel.create_image(0, 0, image=self.tkimg, anchor=NW)
@@ -431,7 +431,7 @@ class LabelTool():
     def classdefine(self):
         self.top = Toplevel()
         self.top.title("Define Classes")
-
+        self.classlist = []
         lbl1 = Entry(self.top)
         lbl1.insert(END, self.classnames[0])
         lbl1.grid(row=1, column=2, sticky=W + E)
@@ -485,7 +485,7 @@ class LabelTool():
             for labels in self.classlist:
                 f.write(str(labels.get()))
                 f.write('\n')
-                self.classnames[i] = labels.get()
+                self.classnames[i] = str(labels.get())
                 i+=1
             f.close()
 
