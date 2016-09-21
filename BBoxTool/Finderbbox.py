@@ -16,7 +16,6 @@ from PIL import Image, ImageTk
 import os
 import glob
 import csv
-import cv2
 
 BASE = RAISED
 SELECTED = FLAT
@@ -96,14 +95,16 @@ class LabelTool():
         self.help.grid(row=4, column=2, sticky=W+E+N)
         # dir entry & load
         self.ldBtn = Button(self.frame, text="2. Load Directory", command=self.loadDir)  # command
-        self.ldBtn.grid(row=5, column=2, sticky=W+E+N+S)
+        self.ldBtn.grid(row=5, column=2, sticky=W+E+N)
 
         #bbox label and save
-        self.labelentry = Button(self.frame, text= '3. Enter Labels', command = self.classdefine)
+        self.labelentry = Frame(self.frame)
         self.labelentry.grid(row=6, column=2, sticky=W+E+N+S)
-        self.labelentry.config(state = DISABLED)
+        self.labelsave = None
+        self.classdefine()
 
-        self.undo = Button(self.frame, text= 'Undo', command = lambda: self.delBBox(True))
+
+        self.undo = Button(self.frame, text= 'Remove Last', command = lambda: self.delBBox(True))
         self.undo.grid(row=7, column=2, sticky=W+E+N+S)
 
         self.btnDel = Button(self.frame, text = 'Delete Selected', command = self.delBBox)
@@ -131,7 +132,7 @@ class LabelTool():
         self.goBtn.pack(side = LEFT)
 
 
-        self.parent.focus_set()
+        self.mainPanel.focus_set()
         # display mouse position
         self.disp = Label(self.ctrPanel, text='')
         self.disp.pack(side = RIGHT)
@@ -145,21 +146,31 @@ class LabelTool():
         self.splash()
         self.showhelp()
 
+
     def splash(self):
         raw_img = Image.open("./Images/001/test.jpeg") #SPLASH SCREEN SOURCE GOES HERE
         self.tkimg = ImageTk.PhotoImage(raw_img)
         self.mainPanel.config(width=max(self.tkimg.width(), 400), height=max(self.tkimg.height(), 400))
         self.mainPanel.create_image(0, 0, image=self.tkimg, anchor=NW)
 
+    def center(self,toplevel):
+        toplevel.update_idletasks()
+        w = toplevel.winfo_screenwidth()
+        h = toplevel.winfo_screenheight()
+        size = tuple(int(_) for _ in toplevel.geometry().split('+')[0].split('x'))
+        x = w / 2 - size[0] / 2
+        y = h / 2 - size[1] / 2
+        toplevel.geometry("%dx%d+%d+%d" % (size + (x, y)))
+
     def showhelp(self):
         helpview = Toplevel()
         helpview.title("Finder Ground Truthing Utility:")
-        instructions = "How to Use this Utility: \n" \
-                       "1. Click on load directory\n" \
-                       "2. Navigate to the desired dataset directory and select any file within\n" \
-                       "3. Once directory is loaded, the first image will appear\n" \
-                       "4. Click on 'Enter Labels' and enter the labels you wish to use. click 'save' once done\n" \
-                       "5. Use the number keys to cycle between classes and draw bounding boxes on the image by left clicking to place the top left and bottom right corners\n" \
+        instructions = "\t\t How to Use this Utility \n" \
+                       "1. Click on load directory\n\n" \
+                       "2. Navigate to the desired dataset directory and select any image within\n\n" \
+                       "3. Once directory is loaded, the first image will appear\n\n" \
+                       "4. Enter the desired names for each label and click 'update label'. NOTE: You do not need to use all labels\n\n" \
+                       "5. Use the number keys, or click the labels and draw bounding boxes on the image by clicking and dragging to create the desired bounding box\n\n" \
                        "6. Once done with a given frame, use the 'Next' or hotkeys to automatically save and move on to the next image in the set\n\n" \
                        "HOTKEYS:\n" \
                        "'a' or left = prev frame\n" \
@@ -168,25 +179,44 @@ class LabelTool():
                        "'c' = clear\n" \
                        "1-7 = switch labels\n" \
                        "'s' = manual save\n"
-        text = Message(helpview, text=instructions)
+        text = Message(helpview, text=instructions, bg="white")
         text.pack()
+        self.center(helpview)
+
+    def activelabels(self,active):
+        if active == 1:
+            self.currentLabel = 0
+        elif active == 2:
+            self.currentLabel = 1
+        elif active == 3:
+            self.currentLabel = 2
+        elif active == 4:
+            self.currentLabel = 3
+        elif active == 5:
+            self.currentLabel = 4
+        elif active == 6:
+            self.currentLabel = 5
+        elif active == 7:
+            self.currentLabel = 6
+
+        self.activelabel.config(text='Active Label: ' + str(self.currentLabel + 1), bg=COLORS[self.currentLabel])
 
     def hotkeys(self, event):
 
         if event.char == "1":
-            self.currentLabel = 0
+            self.activelabels(1)
         elif event.char == "2":
-            self.currentLabel = 1
+            self.activelabels(2)
         elif event.char == "3":
-            self.currentLabel = 2
+            self.activelabels(3)
         elif event.char == "4":
-            self.currentLabel = 3
+            self.activelabels(4)
         elif event.char == "5":
-            self.currentLabel = 4
+            self.activelabels(5)
         elif event.char == "6":
-            self.currentLabel = 5
+            self.activelabels(6)
         elif event.char == "7":
-            self.currentLabel = 6
+            self.activelabels(7)
         elif event.char == "c":
             self.clearBBox()
         elif event.char == "a":
@@ -201,10 +231,10 @@ class LabelTool():
 
     def loadDir(self, dbg=False):
 
-        folderPath = os.path.dirname(os.path.realpath(filedialog.askopenfilename(filetypes=[('jpeg','.jpg')])))
+        folder_path = os.path.dirname(os.path.realpath(filedialog.askopenfilename(filetypes=[('jpeg', '.jpg')])))
 
         # get image list
-        self.imageDir = folderPath
+        self.imageDir = folder_path
         self.imageList = glob.glob(os.path.join(self.imageDir, '*.JPEG'))
         if len(self.imageList) == 0:
             self.imageList = glob.glob(os.path.join(self.imageDir, '*.jpg'))
@@ -219,21 +249,18 @@ class LabelTool():
         self.outDir = os.path.join(r'%s' %(self.imageDir),'Labels', )
         if not os.path.exists(self.outDir):
             os.mkdir(self.outDir)
-        self.classlist = []
         self.loadImage()
-        self.labelentry.config(state=NORMAL)
 
         self.mainPanel.bind("<Button-1>", self.mouseClick)
         self.mainPanel.bind("<ButtonRelease-1>", self.mouseRelease)
         self.mainPanel.bind("<Motion>", self.mouseMove)
         self.parent.bind("<Escape>", self.cancelBBox)  # press <Escape> to cancel current bbox self.cancelBBox
-        self.parent.bind("<Key>", self.hotkeys)
+        self.mainPanel.bind("<Key>", self.hotkeys)
         self.mainPanel.config(scrollregion=self.mainPanel.bbox(ALL))
 
         self.mainPanel.bind("<Button-4>", self.zoom)
         self.mainPanel.bind("<Button-5>", self.zoom)
 
-        print '%d images loaded from %s' %(self.total, os.path.basename(folderPath))
         print ' Annotations will be saved to: %s' %(self.outDir)
 
     def readfile(self): #use  plaintext parsing
@@ -246,10 +273,10 @@ class LabelTool():
                 for row in reader:
                     print str(self.tkimg.width())
                     self.bboxList.append(row)
-                    x1 = int(float(row[1])* self.tkimg.width())
-                    y1 = int(float(row[2])* self.tkimg.height())
-                    x2 =int(float(row[3])* self.tkimg.width())
-                    y2 = int(float(row[4])* self.tkimg.height())
+                    x1 = int(float(row[1]) * self.tkimg.width())
+                    y1 = int(float(row[2]) * self.tkimg.height())
+                    x2 = int(float(row[3]) * self.tkimg.width())
+                    y2 = int(float(row[4]) * self.tkimg.height())
                     tmpId = self.mainPanel.create_rectangle(x1, y1, x2, y2, width=2, outline=COLORS[int(row[0])])
                     self.bboxIdList.append(tmpId)
                     self.listbox.insert(END, '(%f, %f) -> (%f, %f)' % (float(row[1]), float(row[2]), float(row[3]), float(row[4])))
@@ -288,6 +315,7 @@ class LabelTool():
                 f.write('\n')
             f.close()
         print 'Image No. %d saved to %s' % (self.cur, self.labelfilename)
+
     def grab(self, event):
         self._y = event.y
         self._x = event.x
@@ -363,6 +391,7 @@ class LabelTool():
 
     def mouseMove(self, event):
         self.disp.config(text = 'x: %d, y: %d' %(event.x, event.y))
+        self.mainPanel.focus_set()
         if self.tkimg:
             if self.hl:
                 self.mainPanel.delete(self.hl)
@@ -377,7 +406,6 @@ class LabelTool():
                                                             event.x, event.y, \
                                                             width = 2, \
                                                             outline = COLORS[self.currentLabel],dash=(2, 4))
-
 
     def cancelBBox(self, event):
         if 1 == self.STATE['click']:
@@ -429,67 +457,66 @@ class LabelTool():
             self.cur = idx
             self.loadImage()
     def classdefine(self):
-        self.top = Toplevel()
-        self.top.title("Define Classes")
-        self.classlist = []
-        lbl1 = Entry(self.top)
+
+        lbl1 = Entry(self.labelentry,bg="white")
         lbl1.insert(END, self.classnames[0])
         lbl1.grid(row=1, column=2, sticky=W + E)
         self.classlist.append(lbl1)
-        name1 = Label(self.top,text="Label 1:",bg="red")
-        name1.grid(row=1, column=1, sticky=W + E)
-        lbl2 = Entry(self.top)
+        name1 = Button(self.labelentry,text="Label 1:",bg="red",command= lambda:self.activelabels(1))
+        name1.grid(row=1, column=1, sticky=N + W + E)
+        lbl2 = Entry(self.labelentry,bg="white")
         lbl2.insert(END, self.classnames[1])
         lbl2.grid(row=2, column=2, sticky=W + E)
         self.classlist.append(lbl2)
-        name2 = Label(self.top,text="Label 2:",bg="blue",fg="white")
-        name2.grid(row=2, column=1, sticky=W + E)
-        lbl3 = Entry(self.top)
+        name2 = Button(self.labelentry,text="Label 2:",bg="blue",fg="white",command= lambda:self.activelabels(2))
+        name2.grid(row=2, column=1, sticky=N + W + E)
+        lbl3 = Entry(self.labelentry,bg="white")
         lbl3.insert(END, self.classnames[2])
         lbl3.grid(row=3, column=2, sticky=W + E)
         self.classlist.append(lbl3)
-        name3 = Label(self.top,text="Label 3:",bg="yellow")
-        name3.grid(row=3, column=1, sticky=W + E)
-        lbl4 = Entry(self.top)
+        name3 = Button(self.labelentry,text="Label 3:",bg="yellow",command= lambda:self.activelabels(3))
+        name3.grid(row=3, column=1, sticky=N + W + E)
+        lbl4 = Entry(self.labelentry,bg="white")
         lbl4.insert(END, self.classnames[3])
         lbl4.grid(row=4, column=2, sticky=W + E)
         self.classlist.append(lbl4)
-        name4 = Label(self.top,text="Label 4:",bg="pink")
-        name4.grid(row=4, column=1, sticky=W + E)
-        lbl5 = Entry(self.top)
+        name4 = Button(self.labelentry,text="Label 4:",bg="pink",command= lambda:self.activelabels(4))
+        name4.grid(row=4, column=1, sticky=N + W + E)
+        lbl5 = Entry(self.labelentry,bg="white")
         lbl5.insert(END, self.classnames[4])
         lbl5.grid(row=5, column=2, sticky=W + E)
         self.classlist.append(lbl5)
-        name5 = Label(self.top,text="Label 5:",bg="cyan")
-        name5.grid(row=5, column=1, sticky=W + E)
-        lbl6 = Entry(self.top)
+        name5 = Button(self.labelentry,text="Label 5:",bg="cyan",command= lambda:self.activelabels(5))
+        name5.grid(row=5, column=1, sticky=N + W + E)
+        lbl6 = Entry(self.labelentry,bg="white")
         lbl6.insert(END, self.classnames[5])
         lbl6.grid(row=6, column=2, sticky=W + E)
         self.classlist.append(lbl6)
-        name6 = Label(self.top,text="Label 6:",bg="green")
-        name6.grid(row=6, column=1, sticky=W + E)
-        lbl7 = Entry(self.top)
+        name6 = Button(self.labelentry,text="Label 6:",bg="green",command= lambda:self.activelabels(6))
+        name6.grid(row=6, column=1, sticky=N + W + E)
+        lbl7 = Entry(self.labelentry,bg="white")
         lbl1.insert(END, self.classnames[6])
         lbl7.grid(row=7, column=2, sticky=W + E)
         self.classlist.append(lbl7)
-        name7 = Label(self.top, text="Label 7:", bg="black", fg="white")
-        name7.grid(row=7, column=1, sticky=W + E)
+        name7 = Button(self.labelentry, text="Label 7:", bg="black", fg="white", command= lambda: self.activelabels(7))
+        name7.grid(row=7, column=1, sticky=N + W + E)
 
-        button = Button(self.top, text="Save", command=self.createlabels)
-        button.grid(row=8,column=2, sticky=N+S+E+W)
+        self.labelsave = Button(self.labelentry, text="Update Labels", command=self.createlabels)
+        self.labelsave.grid(row=9,column=2, sticky=N+S+E+W)
 
     def createlabels(self):
         labelfile = os.path.join(self.outDir, "labels.txt")
         i=0
         with open(labelfile, 'w') as f:
+            print len(self.classlist)
             for labels in self.classlist:
+                print labels.get()
                 f.write(str(labels.get()))
                 f.write('\n')
                 self.classnames[i] = str(labels.get())
                 i+=1
             f.close()
-
-        self.top.destroy()
+        print "saved labels! " +labelfile
 
 if __name__ == '__main__':
     root = Tk()
