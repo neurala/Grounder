@@ -10,9 +10,14 @@
 #-------------------------------------------------------------------------------
 from __future__ import division
 
+import os, sys
+import PIL.Image
+from PIL import ImageTk,BmpImagePlugin,GifImagePlugin,Jpeg2KImagePlugin,JpegImagePlugin,PngImagePlugin,TiffImagePlugin,WmfImagePlugin # added this line
+
+PIL.Image._initialized=2 # added this line
+import Tkinter
 from Tkinter import *
 import tkFileDialog as filedialog
-from PIL import Image, ImageTk
 import os
 import glob
 import csv
@@ -148,7 +153,7 @@ class LabelTool():
 
 
     def splash(self):
-        raw_img = Image.open("./Images/001/test.jpeg") #SPLASH SCREEN SOURCE GOES HERE
+        raw_img = PIL.Image.open("./Images/001/test.jpeg") #SPLASH SCREEN SOURCE GOES HERE
         self.tkimg = ImageTk.PhotoImage(raw_img)
         self.mainPanel.config(width=max(self.tkimg.width(), 400), height=max(self.tkimg.height(), 400))
         self.mainPanel.create_image(0, 0, image=self.tkimg, anchor=NW)
@@ -289,7 +294,7 @@ class LabelTool():
         # load image
         imagepath = self.imageList[self.cur - 1]
 
-        self.img = Image.open(imagepath)
+        self.img = PIL.Image.open(imagepath)
         self.tkimg = ImageTk.PhotoImage(self.img)
         self.orig_img = self.img
         self.mainPanel.config(width = max(self.tkimg.width(), 400), height = max(self.tkimg.height(), 400))
