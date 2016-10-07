@@ -16,12 +16,13 @@ from PIL import Image, ImageTk
 import os
 import glob
 import csv
+import subprocess
 
 BASE = RAISED
 SELECTED = FLAT
 
 # colors for the bboxes
-COLORS = ['red', 'blue', 'yellow', 'pink', 'cyan', 'green', 'black','green3','maroon4','orchid1'] #max of 7 classes for now
+COLORS = ['red', 'yellow', 'DarkOrange1', 'green','green3', 'DarkSlateGray4','blue', 'cyan','orchid1','maroon4'] #max of 7 classes for now
 # image sizes for the examples
 SIZE = 256, 256
 
@@ -94,7 +95,7 @@ class LabelTool():
         self.help = Button(self.frame, text='1. Getting Started', command= self.showhelp)
         self.help.grid(row=4, column=2, sticky=W+E+N)
         # dir entry & load
-        self.ldBtn = Button(self.frame, text="2. Load Directory", command=self.loadDir)  # command
+        self.ldBtn = Button(self.frame, text="Load Directory",state=DISABLED, command=self.loadDir)  # command
         self.ldBtn.grid(row=5, column=2, sticky=W+E+N)
 
         #bbox label and save
@@ -104,12 +105,12 @@ class LabelTool():
         self.classdefine()
 
 
-        self.undo = Button(self.frame, text= 'Remove Last', command = lambda: self.delBBox(True))
+        self.undo = Button(self.frame, text= 'Undo Label',state=DISABLED, command = lambda: self.delBBox(True))
         self.undo.grid(row=7, column=2, sticky=W+E+N+S)
 
-        self.btnDel = Button(self.frame, text = 'Delete Selected', command = self.delBBox)
+        self.btnDel = Button(self.frame, text = 'Delete Selected',state=DISABLED, command = self.delBBox)
         self.btnDel.grid(row = 8, column = 2, sticky = W+E+S+N)
-        self.btnClear = Button(self.frame, text = 'Clear All', command = self.clearBBox)
+        self.btnClear = Button(self.frame, text = 'Clear All',state=DISABLED, command = self.clearBBox)
         self.btnClear.grid(row = 9, column = 2, sticky = W+E+S+N)
 
 
@@ -118,9 +119,9 @@ class LabelTool():
         # control panel for image navigation
         self.ctrPanel = Frame(self.frame)
         self.ctrPanel.grid(row = 10, column = 1, columnspan = 2, sticky = W+E)
-        self.prevBtn = Button(self.ctrPanel, text='<< Prev', width = 10, command = self.prevImage)
+        self.prevBtn = Button(self.ctrPanel, text='<< Prev', state=DISABLED, width = 10, command = self.prevImage)
         self.prevBtn.pack(side = LEFT, padx = 5, pady = 3)
-        self.nextBtn = Button(self.ctrPanel, text='Next >>', width = 10, command = self.nextImage)
+        self.nextBtn = Button(self.ctrPanel, text='Next >>',state=DISABLED, width = 10, command = self.nextImage)
         self.nextBtn.pack(side = LEFT, padx = 5, pady = 3)
         self.progLabel = Label(self.ctrPanel, text = "Progress:     /    ")
         self.progLabel.pack(side = LEFT, padx = 5)
@@ -242,7 +243,12 @@ class LabelTool():
 
     def loadDir(self, dbg=False):
 
-        folder_path = os.path.dirname(os.path.realpath(filedialog.askopenfilename(filetypes=[('jpeg', '.jpg')])))
+        filepath = os.path.realpath(filedialog.askopenfilename(filetypes=[('data','.jpg .mp4 .avi'),('jpeg', '.jpg'),('mpeg4', '.mp4'),( 'AVI', '.avi')]))
+        #if os.path.splitext(filepath[1]) in {'mp4','avi'}:
+        self.videoProcessing(filepath)
+
+
+        folder_path = os.path.dirname(filepath)
 
         # get image list
         self.imageDir = folder_path
@@ -260,6 +266,7 @@ class LabelTool():
         self.outDir = os.path.join(r'%s' %(self.imageDir),'Labels', )
         if not os.path.exists(self.outDir):
             os.mkdir(self.outDir)
+
         self.loadImage()
 
         self.mainPanel.bind("<Button-1>", self.mouseClick)
@@ -383,6 +390,7 @@ class LabelTool():
         self.img_id = self.mainPanel.create_image(x, y, image=self.tkimg, anchor=NW)
         self.mainPanel.tag_lower(self.img_id)
         self.mainPanel.move(ALL, self.xoffset, self.yoffset)
+
     def mouseRelease(self,event):
         x1, x2 = min(self.STATE['x'], event.x), max(self.STATE['x'], event.x)
         y1, y2 = min(self.STATE['y'], event.y), max(self.STATE['y'], event.y)
@@ -471,75 +479,79 @@ class LabelTool():
             self.saveImage()
             self.cur = idx
             self.loadImage()
+
     def classdefine(self):
 
-        lbl1 = Entry(self.labelentry,bg="white")
+        lbl1 = Entry(self.labelentry,bg="yellow")
         lbl1.insert(END, self.classnames[0])
         lbl1.grid(row=1, column=2, sticky=W + E)
         self.classlist.append(lbl1)
-        name1 = Button(self.labelentry,text="Label 1:",bg="red",command= lambda:self.activelabels(1))
+        name1 = Button(self.labelentry,text="Label 1:", bg=COLORS[0], command= lambda:self.activelabels(1))
         name1.grid(row=1, column=1, sticky=N + W + E)
-        lbl2 = Entry(self.labelentry,bg="white")
+        lbl2 = Entry(self.labelentry,bg="yellow")
         lbl2.insert(END, self.classnames[1])
         lbl2.grid(row=2, column=2, sticky=W + E)
         self.classlist.append(lbl2)
-        name2 = Button(self.labelentry,text="Label 2:",bg="blue",fg="white",command= lambda:self.activelabels(2))
+        name2 = Button(self.labelentry,text="Label 2:", bg=COLORS[1],command= lambda:self.activelabels(2))
         name2.grid(row=2, column=1, sticky=N + W + E)
-        lbl3 = Entry(self.labelentry,bg="white")
+        lbl3 = Entry(self.labelentry,bg="yellow")
         lbl3.insert(END, self.classnames[2])
         lbl3.grid(row=3, column=2, sticky=W + E)
         self.classlist.append(lbl3)
-        name3 = Button(self.labelentry,text="Label 3:",bg="yellow",command= lambda:self.activelabels(3))
+        name3 = Button(self.labelentry, text="Label 3:", bg=COLORS[2], command= lambda:self.activelabels(3))
         name3.grid(row=3, column=1, sticky=N + W + E)
-        lbl4 = Entry(self.labelentry,bg="white")
+        lbl4 = Entry(self.labelentry, bg="yellow")
         lbl4.insert(END, self.classnames[3])
         lbl4.grid(row=4, column=2, sticky=W + E)
         self.classlist.append(lbl4)
-        name4 = Button(self.labelentry,text="Label 4:",bg="pink",command= lambda:self.activelabels(4))
+        name4 = Button(self.labelentry, text="Label 4:", bg=COLORS[3], command= lambda:self.activelabels(4))
         name4.grid(row=4, column=1, sticky=N + W + E)
-        lbl5 = Entry(self.labelentry,bg="white")
+        lbl5 = Entry(self.labelentry, bg="yellow")
         lbl5.insert(END, self.classnames[4])
         lbl5.grid(row=5, column=2, sticky=W + E)
         self.classlist.append(lbl5)
-        name5 = Button(self.labelentry,text="Label 5:",bg="cyan",command= lambda:self.activelabels(5))
+        name5 = Button(self.labelentry, text="Label 5:", bg=COLORS[4], command= lambda:self.activelabels(5))
         name5.grid(row=5, column=1, sticky=N + W + E)
-        lbl6 = Entry(self.labelentry,bg="white")
+        lbl6 = Entry(self.labelentry, bg="yellow")
         lbl6.insert(END, self.classnames[5])
         lbl6.grid(row=6, column=2, sticky=W + E)
         self.classlist.append(lbl6)
-        name6 = Button(self.labelentry,text="Label 6:",bg="green",command= lambda:self.activelabels(6))
+        name6 = Button(self.labelentry,text="Label 6:", bg=COLORS[5], command= lambda:self.activelabels(6))
         name6.grid(row=6, column=1, sticky=N + W + E)
-        lbl7 = Entry(self.labelentry,bg="white")
+        lbl7 = Entry(self.labelentry,bg="yellow")
         lbl1.insert(END, self.classnames[6])
         lbl7.grid(row=7, column=2, sticky=W + E)
         self.classlist.append(lbl7)
-        name7 = Button(self.labelentry, text="Label 7:", bg="black", fg="white", command= lambda: self.activelabels(7))
+        name7 = Button(self.labelentry, text="Label 7:", bg=COLORS[6], fg="white", command= lambda: self.activelabels(7))
         name7.grid(row=7, column=1, sticky=N + W + E)
 
-        lbl8 = Entry(self.labelentry,bg="white")
+        lbl8 = Entry(self.labelentry,bg="yellow")
         lbl8.grid(row=8, column=2, sticky=W + E)
         self.classlist.append(lbl8)
-        name8 = Button(self.labelentry, text="Label 8:", bg="green3", fg="white", command= lambda: self.activelabels(8))
+        name8 = Button(self.labelentry, text="Label 8:", bg=COLORS[7], command= lambda: self.activelabels(8))
         name8.grid(row=8, column=1, sticky=N + W + E)
-        lbl9 = Entry(self.labelentry,bg="white")
+        lbl9 = Entry(self.labelentry,bg="yellow")
         lbl9.grid(row=9, column=2, sticky=W + E)
         self.classlist.append(lbl9)
-        name9 = Button(self.labelentry, text="Label 9:", bg="maroon4", fg="white", command= lambda: self.activelabels(9))
+        name9 = Button(self.labelentry, text="Label 9:", bg=COLORS[8], command= lambda: self.activelabels(9))
         name9.grid(row=9, column=1, sticky=N + W + E)
-        lbl10 = Entry(self.labelentry,bg="white")
+        lbl10 = Entry(self.labelentry,bg="yellow")
         lbl10.grid(row=10, column=2, sticky=W + E)
         self.classlist.append(lbl10)
-        name10 = Button(self.labelentry, text="Label 10:", bg="orchid1", fg="white", command= lambda: self.activelabels(10))
+        name10 = Button(self.labelentry, text="Label 10:", bg=COLORS[9], command= lambda: self.activelabels(10))
         name10.grid(row=10, column=1, sticky=N + W + E)
-        self.labelsave = Button(self.labelentry, text="Update Labels", command=self.createlabels)
+        self.labelsave = Button(self.labelentry, text="Save labels", bg="red", command=self.createlabels)
         self.labelsave.grid(row=12,column=2, sticky=N+S+E+W)
 
     def createlabels(self):
         labelfile = os.path.join(self.outDir, "labels.txt")
         i=0
+        self.labelsave.config(bg='gray66')
+        self.ldBtn.config( state=NORMAL)
         with open(labelfile, 'w') as f:
             print len(self.classlist)
             for labels in self.classlist:
+                labels.config(bg="white")
                 print labels.get()
                 f.write(str(labels.get()))
                 f.write('\n')
@@ -547,6 +559,46 @@ class LabelTool():
                 i+=1
             f.close()
         print "saved labels! " +labelfile
+
+    def videoProcessing(self, videopath):
+
+        video_processing_window = Toplevel()
+
+
+        # command = ['ffprobe', '-v','error', '-show_format',videopath]
+        # print command
+        duration = subprocess.check_output(['ffprobe', '-i', videopath, '-show_entries', 'format=duration', '-v', 'quiet', '-of', 'csv=%s' % ("p=0")])
+
+        # command = ['ffprobe',videopath,' 2>&1',' | ','grep fps']
+        fps_check = subprocess.check_output(['ffprobe', '-i', videopath, '-show_entries', 'stream=avg_frame_rate', '-v', 'quiet', '-of', 'csv=%s' % ("p=0")])
+        fps = eval(fps_check)
+        title = Label(video_processing_window, text='Video Processing')
+        title.grid(row=1, column=1, sticky=W + N)
+        frames_per_second = Label(video_processing_window, text='FPS: '+str(fps))
+        frames_per_second.grid(row=2, column=1, sticky=W + N)
+        video_length = Label(video_processing_window,text='Length(seconds): '+duration)
+        video_length.grid(row=3, column=1, sticky=W + N)
+        set_video_start_label = Label(video_processing_window, text='Start time(seconds): ')
+        set_video_start_label.grid(row=3, column=2, sticky=W + N)
+        set_video_end_label = Label(video_processing_window, text='End time(seconds): ')
+        set_video_end_label.grid(row=4, column=2, sticky=W + N)
+
+        set_target_fps_label = Label(video_processing_window, text='sample rate(FPS): ')
+        set_target_fps_label.grid(row=2, column=2, sticky=W + N)
+
+        set_video_start = Entry(video_processing_window,bg="white")
+        set_video_start.grid(row=3, column=3, sticky=W + E)
+
+        set_video_end = Entry(video_processing_window,bg="white")
+        set_video_end.grid(row=4, column=3, sticky=W + E)
+
+        set_target_fps = Entry(video_processing_window, bg="white")
+        set_target_fps.grid(row=4, column=3, sticky=W + E)
+
+
+        video_processing_window.grab_set()
+        self.parent.wait_window(video_processing_window)
+
 
 if __name__ == '__main__':
     root = Tk()
