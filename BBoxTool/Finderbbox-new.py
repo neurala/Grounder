@@ -1,12 +1,11 @@
 #-------------------------------------------------------------------------------
 # Name:        Object bounding box label tool
-# Purpose:     Label object bboxes for Finder ground truth data
-# Author:      Lucas
+# Purpose:     Label object bounding boxes for Ground Truthing data
+# Author:      Lucas Neves
 # Company:     Neurala Inc.
 # Created:     9/01/2016
-# Last updated by: Lucas
-# Last updated: 9/09/2016
-#
+# Last updated by: Lucas Neves
+# Last updated: 10/10/2016
 #-------------------------------------------------------------------------------
 from __future__ import division
 
@@ -22,7 +21,7 @@ BASE = RAISED
 SELECTED = FLAT
 
 # colors for the bboxes
-COLORS = ['red', 'yellow', 'DarkOrange1', 'green','green3', 'DarkSlateGray4','blue', 'cyan','orchid1','maroon4'] #max of 7 classes for now
+COLORS = ['red', 'yellow', 'DarkOrange1', 'green', 'green3', 'DarkSlateGray4', 'blue', 'cyan', 'orchid1','maroon4'] #max of 7 classes for now
 # image sizes for the examples
 SIZE = 256, 256
 
@@ -50,7 +49,7 @@ class LabelTool():
         self.tkimg = None
         self.classlist = []
         self.classnames= ["" for x in range(10)]
-
+        self.classbuttons = []
         # initialize mouse state
         self.STATE = {}
         self.STATE['click'] = 0
@@ -92,15 +91,15 @@ class LabelTool():
         self.activelabel = Label(self.frame, text='Active Label: '+str(self.currentLabel+1),bg=COLORS[self.currentLabel])
         self.activelabel.grid(row=3,column=2,sticky=W+E+N)
         #help button
-        self.help = Button(self.frame, text='1. Getting Started', command= self.showhelp)
+        self.help = Button(self.frame, text='Help', command= self.showhelp)
         self.help.grid(row=4, column=2, sticky=W+E+N)
         # dir entry & load
-        self.ldBtn = Button(self.frame, text="Load Directory",state=DISABLED, command=self.loadDir)  # command
+        self.ldBtn = Button(self.frame, text="Load Directory",bg='yellow', command=self.loadDir)  # command
         self.ldBtn.grid(row=5, column=2, sticky=W+E+N)
 
         #bbox label and save
         self.labelentry = Frame(self.frame)
-        self.labelentry.grid(row=6, column=2, sticky=W+E+N+S)
+        self.labelentry.grid(row=6, column=2, sticky=W+E+N)
         self.labelsave = None
         self.classdefine()
 
@@ -129,9 +128,8 @@ class LabelTool():
         self.tmpLabel.pack(side = LEFT, padx = 5)
         self.idxEntry = Entry(self.ctrPanel, width = 5)
         self.idxEntry.pack(side = LEFT)
-        self.goBtn = Button(self.ctrPanel, text = 'Go', command = self.gotoImage)
+        self.goBtn = Button(self.ctrPanel, text='Go', state=DISABLED, command = self.gotoImage)
         self.goBtn.pack(side = LEFT)
-
 
         self.mainPanel.focus_set()
         # display mouse position
@@ -144,9 +142,13 @@ class LabelTool():
         self.parent.bind("<Left>", self.prevImage)
         self.parent.bind("<Right>", self.nextImage)
         self.top = None
+        self.video_processing_window = None
         self.splash()
-        self.showhelp()
 
+
+
+        #self.showhelp()
+        self.init = True
 
     def splash(self):
         raw_img = Image.open("./Images/001/test.jpeg") #SPLASH SCREEN SOURCE GOES HERE
@@ -243,15 +245,20 @@ class LabelTool():
 
     def loadDir(self, dbg=False):
 
-        filepath = os.path.realpath(filedialog.askopenfilename(filetypes=[('data','.jpg .mp4 .avi'),('jpeg', '.jpg'),('mpeg4', '.mp4'),( 'AVI', '.avi')]))
-        #if os.path.splitext(filepath[1]) in {'mp4','avi'}:
-        self.videoProcessing(filepath)
-
+        filepath = os.path.realpath(filedialog.askopenfilename(filetypes=[('data','.jpg .mp4 .avi .mov')]))
 
         folder_path = os.path.dirname(filepath)
+        filename = os.path.basename(filepath)
+        filename = os.path.splitext(filename)[0]
 
-        # get image list
-        self.imageDir = folder_path
+        if os.path.splitext(filepath)[1] in {'.mp4','.avi','.mov'}:
+            self.imageDir = os.path.join(r'%s' % (folder_path), filename)
+            if not os.path.exists(self.imageDir):
+                os.mkdir(self.imageDir)
+                self.videoProcessing(filepath, filename)
+        else:
+            self.imageDir = folder_path
+
         self.imageList = glob.glob(os.path.join(self.imageDir, '*.JPEG'))
         if len(self.imageList) == 0:
             self.imageList = glob.glob(os.path.join(self.imageDir, '*.jpg'))
@@ -266,22 +273,31 @@ class LabelTool():
         self.outDir = os.path.join(r'%s' %(self.imageDir),'Labels', )
         if not os.path.exists(self.outDir):
             os.mkdir(self.outDir)
+            for labels in self.classlist:
+                labels.config(bg='yellow')
+            self.labelsave.config(bg='green', state=NORMAL)
+        else:
+            self.loadlabels()
+            i = 0
+            for buttons in self.classbuttons:
+                buttons.config(bg=COLORS[i], state=NORMAL)
+                i += 1
 
         self.loadImage()
 
-        self.mainPanel.bind("<Button-1>", self.mouseClick)
-        self.mainPanel.bind("<ButtonRelease-1>", self.mouseRelease)
-        self.mainPanel.bind("<Motion>", self.mouseMove)
-        self.parent.bind("<Escape>", self.cancelBBox)  # press <Escape> to cancel current bbox self.cancelBBox
-        self.mainPanel.bind("<Key>", self.hotkeys)
-        self.mainPanel.config(scrollregion=self.mainPanel.bbox(ALL))
-
-        self.mainPanel.bind("<Button-4>", self.zoom)
-        self.mainPanel.bind("<Button-5>", self.zoom)
-
-        self.mainPanel.bind("<MouseWheel>", self.zoom)
+        self.ldBtn.config(state=DISABLED, bg='gray76')
 
         print ' Annotations will be saved to: %s' %(self.outDir)
+    def loadlabels(self):
+        labelfile = os.path.join(self.outDir, "labels.txt")
+        if os.path.exists(labelfile):
+            with open(labelfile,"r") as labels:
+                i =0
+                for label in labels:
+                    self.classlist[i].insert(END, label.rstrip('\n'))
+                    self.classlist[i].config(state=DISABLED)
+                    i+=1
+            self.bindCanvasTools()
 
     def readfile(self): #use  plaintext parsing
         # load labels
@@ -303,7 +319,6 @@ class LabelTool():
                     self.listbox.itemconfig(len(self.bboxIdList) - 1,
                                             fg=COLORS[int(row[0])])
                 self.mainPanel.scale(ALL, 0, 0, self.scale, self.scale)
-                self.redraw()
 
     def loadImage(self):
         # load image
@@ -316,7 +331,6 @@ class LabelTool():
         self.mainPanel.create_image(0, 0, image = self.tkimg, anchor=NW)
         self.progLabel.config(text = "%04d/%04d" %(self.cur, self.total))
 
-
         self.clearBBox()
         self.imagename = os.path.split(imagepath)[-1].split('.')[0]
         labelname = self.imagename + '.txt'
@@ -324,6 +338,7 @@ class LabelTool():
         bbox_cnt = 0
         if os.path.exists(self.labelfilename):
             self.readfile()
+        self.redraw()
 
     def saveImage(self):
         with open(self.labelfilename, 'w') as f:
@@ -482,123 +497,176 @@ class LabelTool():
 
     def classdefine(self):
 
-        lbl1 = Entry(self.labelentry,bg="yellow")
+        lbl1 = Entry(self.labelentry,bg="white")
         lbl1.insert(END, self.classnames[0])
         lbl1.grid(row=1, column=2, sticky=W + E)
         self.classlist.append(lbl1)
-        name1 = Button(self.labelentry,text="Label 1:", bg=COLORS[0], command= lambda:self.activelabels(1))
+        name1 = Button(self.labelentry,text="Label 1:",state=DISABLED, command= lambda:self.activelabels(1))
         name1.grid(row=1, column=1, sticky=N + W + E)
-        lbl2 = Entry(self.labelentry,bg="yellow")
+        self.classbuttons.append(name1)
+        lbl2 = Entry(self.labelentry,bg="white")
         lbl2.insert(END, self.classnames[1])
         lbl2.grid(row=2, column=2, sticky=W + E)
         self.classlist.append(lbl2)
-        name2 = Button(self.labelentry,text="Label 2:", bg=COLORS[1],command= lambda:self.activelabels(2))
+        name2 = Button(self.labelentry,text="Label 2:",state=DISABLED,command= lambda:self.activelabels(2))
         name2.grid(row=2, column=1, sticky=N + W + E)
-        lbl3 = Entry(self.labelentry,bg="yellow")
+        self.classbuttons.append(name2)
+        lbl3 = Entry(self.labelentry,bg="white")
         lbl3.insert(END, self.classnames[2])
         lbl3.grid(row=3, column=2, sticky=W + E)
         self.classlist.append(lbl3)
-        name3 = Button(self.labelentry, text="Label 3:", bg=COLORS[2], command= lambda:self.activelabels(3))
+        name3 = Button(self.labelentry, text="Label 3:",state=DISABLED, command= lambda:self.activelabels(3))
         name3.grid(row=3, column=1, sticky=N + W + E)
-        lbl4 = Entry(self.labelentry, bg="yellow")
+        self.classbuttons.append(name3)
+        lbl4 = Entry(self.labelentry, bg="white")
         lbl4.insert(END, self.classnames[3])
         lbl4.grid(row=4, column=2, sticky=W + E)
         self.classlist.append(lbl4)
-        name4 = Button(self.labelentry, text="Label 4:", bg=COLORS[3], command= lambda:self.activelabels(4))
+        name4 = Button(self.labelentry, text="Label 4:",state=DISABLED, command= lambda:self.activelabels(4))
         name4.grid(row=4, column=1, sticky=N + W + E)
-        lbl5 = Entry(self.labelentry, bg="yellow")
+        self.classbuttons.append(name4)
+        lbl5 = Entry(self.labelentry, bg="white")
         lbl5.insert(END, self.classnames[4])
         lbl5.grid(row=5, column=2, sticky=W + E)
         self.classlist.append(lbl5)
-        name5 = Button(self.labelentry, text="Label 5:", bg=COLORS[4], command= lambda:self.activelabels(5))
+        name5 = Button(self.labelentry, text="Label 5:",state=DISABLED, command= lambda:self.activelabels(5))
         name5.grid(row=5, column=1, sticky=N + W + E)
-        lbl6 = Entry(self.labelentry, bg="yellow")
+        self.classbuttons.append(name5)
+        lbl6 = Entry(self.labelentry, bg="white")
         lbl6.insert(END, self.classnames[5])
         lbl6.grid(row=6, column=2, sticky=W + E)
         self.classlist.append(lbl6)
-        name6 = Button(self.labelentry,text="Label 6:", bg=COLORS[5], command= lambda:self.activelabels(6))
+        name6 = Button(self.labelentry,text="Label 6:",state=DISABLED, command= lambda:self.activelabels(6))
         name6.grid(row=6, column=1, sticky=N + W + E)
-        lbl7 = Entry(self.labelentry,bg="yellow")
+        self.classbuttons.append(name6)
+        lbl7 = Entry(self.labelentry,bg="white")
         lbl1.insert(END, self.classnames[6])
         lbl7.grid(row=7, column=2, sticky=W + E)
         self.classlist.append(lbl7)
-        name7 = Button(self.labelentry, text="Label 7:", bg=COLORS[6], fg="white", command= lambda: self.activelabels(7))
+        name7 = Button(self.labelentry, text="Label 7:",state=DISABLED, fg="white", command= lambda: self.activelabels(7))
         name7.grid(row=7, column=1, sticky=N + W + E)
-
-        lbl8 = Entry(self.labelentry,bg="yellow")
+        self.classbuttons.append(name7)
+        lbl8 = Entry(self.labelentry,bg="white")
         lbl8.grid(row=8, column=2, sticky=W + E)
         self.classlist.append(lbl8)
-        name8 = Button(self.labelentry, text="Label 8:", bg=COLORS[7], command= lambda: self.activelabels(8))
+        name8 = Button(self.labelentry, text="Label 8:",state=DISABLED, command= lambda: self.activelabels(8))
         name8.grid(row=8, column=1, sticky=N + W + E)
-        lbl9 = Entry(self.labelentry,bg="yellow")
+        self.classbuttons.append(name8)
+        lbl9 = Entry(self.labelentry, bg="white")
         lbl9.grid(row=9, column=2, sticky=W + E)
         self.classlist.append(lbl9)
-        name9 = Button(self.labelentry, text="Label 9:", bg=COLORS[8], command= lambda: self.activelabels(9))
+        name9 = Button(self.labelentry, text="Label 9:",state=DISABLED, command= lambda: self.activelabels(9))
         name9.grid(row=9, column=1, sticky=N + W + E)
-        lbl10 = Entry(self.labelentry,bg="yellow")
+        self.classbuttons.append(name9)
+        lbl10 = Entry(self.labelentry,bg="white")
         lbl10.grid(row=10, column=2, sticky=W + E)
         self.classlist.append(lbl10)
-        name10 = Button(self.labelentry, text="Label 10:", bg=COLORS[9], command= lambda: self.activelabels(10))
+        name10 = Button(self.labelentry, text="Label 10:",state=DISABLED, command= lambda: self.activelabels(10))
         name10.grid(row=10, column=1, sticky=N + W + E)
-        self.labelsave = Button(self.labelentry, text="Save labels", bg="red", command=self.createlabels)
+        self.classbuttons.append(name10)
+        self.labelsave = Button(self.labelentry, text="Save labels", state=DISABLED, command=self.createlabels)
         self.labelsave.grid(row=12,column=2, sticky=N+S+E+W)
 
     def createlabels(self):
         labelfile = os.path.join(self.outDir, "labels.txt")
         i=0
-        self.labelsave.config(bg='gray66')
-        self.ldBtn.config( state=NORMAL)
+        self.labelsave.config(bg='gray76',state=DISABLED)
+        self.bindCanvasTools()
+
         with open(labelfile, 'w') as f:
             print len(self.classlist)
             for labels in self.classlist:
-                labels.config(bg="white")
+                labels.config(bg="gray76", state=DISABLED)
                 print labels.get()
                 f.write(str(labels.get()))
                 f.write('\n')
                 self.classnames[i] = str(labels.get())
                 i+=1
             f.close()
+        i=0
+        for buttons in self.classbuttons:
+            buttons.config(bg=COLORS[i],state=NORMAL)
+            i+=1
         print "saved labels! " +labelfile
 
-    def videoProcessing(self, videopath):
+    def videoProcessing(self, videopath,filename):
 
-        video_processing_window = Toplevel()
+        self.video_processing_window = Toplevel()
 
-
-        # command = ['ffprobe', '-v','error', '-show_format',videopath]
-        # print command
         duration = subprocess.check_output(['ffprobe', '-i', videopath, '-show_entries', 'format=duration', '-v', 'quiet', '-of', 'csv=%s' % ("p=0")])
-
-        # command = ['ffprobe',videopath,' 2>&1',' | ','grep fps']
         fps_check = subprocess.check_output(['ffprobe', '-i', videopath, '-show_entries', 'stream=avg_frame_rate', '-v', 'quiet', '-of', 'csv=%s' % ("p=0")])
+
         fps = eval(fps_check)
-        title = Label(video_processing_window, text='Video Processing')
+
+        title = Label(self.video_processing_window, text='Video Information')
         title.grid(row=1, column=1, sticky=W + N)
-        frames_per_second = Label(video_processing_window, text='FPS: '+str(fps))
+        title = Label(self.video_processing_window, text='Sampling Parameters')
+        title.grid(row=1, column=2, sticky=W + N)
+
+        frames_per_second = Label(self.video_processing_window, text='FPS: '+str(fps))
         frames_per_second.grid(row=2, column=1, sticky=W + N)
-        video_length = Label(video_processing_window,text='Length(seconds): '+duration)
+
+        video_length = Label(self.video_processing_window, text='Length(seconds): '+duration)
         video_length.grid(row=3, column=1, sticky=W + N)
-        set_video_start_label = Label(video_processing_window, text='Start time(seconds): ')
+
+        set_video_start_label = Label(self.video_processing_window, text='Start time(seconds): ')
         set_video_start_label.grid(row=3, column=2, sticky=W + N)
-        set_video_end_label = Label(video_processing_window, text='End time(seconds): ')
+
+        set_video_end_label = Label(self.video_processing_window, text='End time(seconds): ')
         set_video_end_label.grid(row=4, column=2, sticky=W + N)
 
-        set_target_fps_label = Label(video_processing_window, text='sample rate(FPS): ')
+        set_target_fps_label = Label(self.video_processing_window, text='sample rate(FPS): ')
         set_target_fps_label.grid(row=2, column=2, sticky=W + N)
 
-        set_video_start = Entry(video_processing_window,bg="white")
+        set_target_fps = Entry(self.video_processing_window, bg="white")
+        set_target_fps.grid(row=2, column=3, sticky=W + E)
+
+        set_video_start = Entry(self.video_processing_window, bg="white")
         set_video_start.grid(row=3, column=3, sticky=W + E)
 
-        set_video_end = Entry(video_processing_window,bg="white")
+        set_video_end = Entry(self.video_processing_window, bg="white")
         set_video_end.grid(row=4, column=3, sticky=W + E)
 
-        set_target_fps = Entry(video_processing_window, bg="white")
-        set_target_fps.grid(row=4, column=3, sticky=W + E)
 
 
-        video_processing_window.grab_set()
-        self.parent.wait_window(video_processing_window)
+        do_slices_button = Button(self.video_processing_window, text="Sample Video", command=lambda: self.doSlices(float(fps), float(duration), set_target_fps.get(), set_video_start.get(), set_video_end.get(),filename,videopath))
+        do_slices_button.grid(row=5, column=2, sticky=W+E)
+        self.video_processing_window.grab_set()
+        self.parent.wait_window(self.video_processing_window)
 
+    def doSlices(self, native_fps, native_duration, fps, start, end,filename,videopath):
+
+        if float(start) < float(end):
+            print "good video range"
+            print native_fps
+            print fps
+            if float(fps) <= float(native_fps):
+                print "good framerate"
+                if float(end) <= float(native_duration):
+                    print "slicing video"
+                    segment = float(end) - float(start)
+                    slices = subprocess.check_output(['ffmpeg', '-i', videopath,'-ss',str(start),'-t',str(segment), '-q:v', '2', '-r', str(fps), self.imageDir+"/"+filename+"%5d.jpg"])
+                    self.video_processing_window.destroy()
+
+    def bindCanvasTools(self):
+        self.mainPanel.bind("<Button-1>", self.mouseClick)
+        self.mainPanel.bind("<ButtonRelease-1>", self.mouseRelease)
+        self.mainPanel.bind("<Motion>", self.mouseMove)
+        self.parent.bind("<Escape>", self.cancelBBox)  # press <Escape> to cancel current bbox self.cancelBBox
+        self.mainPanel.bind("<Key>", self.hotkeys)
+        self.mainPanel.config(scrollregion=self.mainPanel.bbox(ALL))
+
+        self.mainPanel.bind("<Button-4>", self.zoom)
+        self.mainPanel.bind("<Button-5>", self.zoom)
+
+        self.mainPanel.bind("<MouseWheel>", self.zoom)
+        self.undo.config(state=NORMAL)
+        self.btnDel.config(state=NORMAL)
+        self.btnClear.config(state=NORMAL)
+        self.prevBtn.config(state=NORMAL)
+        self.nextBtn.config(state=NORMAL)
+        self.goBtn.config(state=NORMAL)
+        self.idxEntry.config(bg='white')
 
 if __name__ == '__main__':
     root = Tk()
