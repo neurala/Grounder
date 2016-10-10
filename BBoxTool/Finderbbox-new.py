@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 # Name:        Object bounding box label tool
-# Purpose:     Label object bounding boxes for Ground Truthing data
+# Purpose:     Labels objects of interest for processing
 # Author:      Lucas Neves
 # Company:     Neurala Inc.
 # Created:     9/01/2016
@@ -21,7 +21,7 @@ BASE = RAISED
 SELECTED = FLAT
 
 # colors for the bboxes
-COLORS = ['red', 'yellow', 'DarkOrange1', 'green', 'green3', 'DarkSlateGray4', 'blue', 'cyan', 'orchid1','maroon4'] #max of 7 classes for now
+COLORS = ['red', 'yellow', 'DarkOrange1', 'green', 'green3', 'DarkSlateGray4', 'blue', 'cyan', 'orchid1', 'maroon4'] #max of 10 classes for now
 # image sizes for the examples
 SIZE = 256, 256
 
@@ -75,11 +75,15 @@ class LabelTool():
         self.orig_img = None
         self.img = None
         self.img_id = None
+
+        #popup windows
+        self.top = None
+        self.video_processing_window = None
+
         # ----------------- GUI stuff ---------------------
 
         # main panel for labeling
         self.mainPanel = Canvas(self.frame, bd=0, cursor='tcross')
-
 
         self.mainPanel.grid(row=1, column=1, rowspan=13, sticky=N+W)
 
@@ -112,9 +116,6 @@ class LabelTool():
         self.btnClear = Button(self.frame, text = 'Clear All',state=DISABLED, command = self.clearBBox)
         self.btnClear.grid(row = 9, column = 2, sticky = W+E+S+N)
 
-
-
-
         # control panel for image navigation
         self.ctrPanel = Frame(self.frame)
         self.ctrPanel.grid(row = 10, column = 1, columnspan = 2, sticky = W+E)
@@ -139,16 +140,7 @@ class LabelTool():
         self.frame.columnconfigure(1, weight = 1)
         self.frame.rowconfigure(4, weight = 1)
 
-        self.parent.bind("<Left>", self.prevImage)
-        self.parent.bind("<Right>", self.nextImage)
-        self.top = None
-        self.video_processing_window = None
         self.splash()
-
-
-
-        #self.showhelp()
-        self.init = True
 
     def splash(self):
         raw_img = Image.open("./Images/001/test.jpeg") #SPLASH SCREEN SOURCE GOES HERE
@@ -328,15 +320,14 @@ class LabelTool():
         self.img = Image.open(imagepath)
         self.tkimg = ImageTk.PhotoImage(self.img)
         self.orig_img = self.img
-        self.mainPanel.config(width = max(self.tkimg.width(), 400), height = max(self.tkimg.height(), 400))
-        self.mainPanel.create_image(0, 0, image = self.tkimg, anchor=NW)
-        self.progLabel.config(text = "%04d/%04d" %(self.cur, self.total))
+        self.mainPanel.config(width=max(self.tkimg.width(), 400), height = max(self.tkimg.height(), 400))
+        self.mainPanel.create_image(0, 0, image=self.tkimg, anchor=NW)
+        self.progLabel.config(text="%04d/%04d" % (self.cur, self.total))
 
         self.clearBBox()
         self.imagename = os.path.split(imagepath)[-1].split('.')[0]
         labelname = self.imagename + '.txt'
         self.labelfilename = os.path.join(self.outDir, labelname)
-        bbox_cnt = 0
         if os.path.exists(self.labelfilename):
             self.readfile()
         self.redraw()
@@ -599,6 +590,9 @@ class LabelTool():
 
         self.mainPanel.bind("<Button-4>", self.zoom)
         self.mainPanel.bind("<Button-5>", self.zoom)
+
+        self.parent.bind("<Left>", self.prevImage)
+        self.parent.bind("<Right>", self.nextImage)
 
         self.mainPanel.bind("<MouseWheel>", self.zoom)
         self.undo.config(state=NORMAL)
