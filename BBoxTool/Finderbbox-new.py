@@ -159,20 +159,39 @@ class LabelTool():
 
     def showhelp(self):
         helpview = Toplevel()
-        helpview.title("Finder Ground Truthing Utility:")
-        instructions = "\t\t How to Use this Utility \n" \
-                       "1. Click on load directory\n\n" \
-                       "2. Navigate to the desired dataset directory and select any image within\n\n" \
-                       "3. Once directory is loaded, the first image will appear\n\n" \
-                       "4. Enter the desired names for each label and click 'update label'. NOTE: You do not need to use all labels\n\n" \
-                       "5. Use the number keys, or click the labels and draw bounding boxes on the image by clicking and dragging to create the desired bounding box\n\n" \
-                       "6. Once done with a given frame, use the 'Next' or hotkeys to automatically save and move on to the next image in the set\n\n" \
-                       "HOTKEYS:\n" \
-                       "'a' or left = prev frame\n" \
-                       "'d' or right = next frame\n" \
+        helpview.title("TAGME INSTRUCTIONS:")
+        instructions = "1) Click on 'Load directory'. \n" \
+                       "\t Go to a directory and click on either a video or an image.\n"\
+                       "\t Videos and images must be in their own folder.\n\n" \
+                       "2) If you are selecting images, please skip this step.\n" \
+                       "\t After selecting a video, a pop-up will come up.\n" \
+                       "\t Enter the frames per second, and the beginning and ending time frame that you would like. \n"\
+                       "\t A faster frame rate and a longer time will result in a longer time to load. The load may take a few minutes.\n\n" \
+                       "3) Enter your labels.\n" \
+                       "\t Keep in mind that this action CANNOT be repeated and you will be unable to add additional labels,\n " \
+                       "\t so make sure that you enter all object names from the beginning. When you are done, click 'Save Labels'.\n\n" \
+                       "4) Draw bounding boxes around your object.\n" \
+                       "\t Each label has a corresponding color.\n" \
+                       "\t To switch between labels either click on the label itself or select the corresponding number on your keyboard.\n" \
+                       "\t Go back and forth between frames by clicking the arrow keys on your keypad, or 'a', 'd'.\n" \
+                       "\t Make sure to not draw bounding boxes around something that would be very difficult for you to recognize. \n" \
+                       "\t Keep in mind that the software will be no smarter than you. If you cannot recognize it, neither can the software.\n\n" \
+                       "5) Exit TagMe when done.\n" \
+                       "\t Saving is done automatically when you move to a new frame, so when you are done, \n" \
+                       "\t simply click 'next' to ensure there are no more images, then exit TagMe. \n" \
+                       "\t Make sure to double check your work. If you accidentally click out, it is no problem. \n" \
+                       "\t Your progress will be saved and you can pick up where you left off.\n\n" \
+                       "6) Upload Data. \n" \
+                       "\t When you are completely finished labeling your images, zip your folder that contains your images \n " \
+                       "\t and a newly created 'labels' folder within. \n" \
+                       "\t This zipped file can then be uploaded to our server to be trained on your custom brain.\n" \
+                       "\t Once training is complete, it will be sent back to you.\n\n" \
+                       "Useful hotkeys:\n" \
+                       "'a' or left arrow = prev frame\n" \
+                       "'d' or right arrow = next frame\n" \
                        "'z' = undo\n" \
                        "'c' = clear\n" \
-                       "1-7 = switch labels\n" \
+                       "1-0 = switch labels\n" \
                        "'s' = manual save\n"
         text = Message(helpview, text=instructions, bg="white")
         text.pack()
@@ -493,7 +512,7 @@ class LabelTool():
             lbl.insert(END, self.classnames[i])
             lbl.grid(row=i+1, column=2, sticky=W+E)
             self.classlist.append(lbl)
-            name = Button(self.labelentry, text="Label "+(str(i+1))+":", state=DISABLED, command= lambda:self.activelabels(i+1))
+            name = Button(self.labelentry, text="Label "+(str(i+1))+":", state=DISABLED, command= lambda i=i:self.activelabels(i+1))
             name.grid(row=i+1, column=1, sticky=N+W+E)
             self.classbuttons.append(name)
         self.labelsave = Button(self.labelentry, text="Save labels", state=DISABLED, command=self.createlabels)

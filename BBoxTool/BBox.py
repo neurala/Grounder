@@ -620,7 +620,6 @@ class VideoLabelTool(Frame):  # need tracker to complete this bit
         self.trackers.append((tracker, label, idx))
 
     def loadVideo(self):
-
         ret, videoframe =self.video.read()
         cv2image = cv2.cvtColor(videoframe, cv2.COLOR_BGR2RGBA)
 
