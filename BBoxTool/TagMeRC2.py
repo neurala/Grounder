@@ -171,6 +171,14 @@ class LabelTool():
         self.center(helpview)
         helpview.lift()
 
+    def showEnd(self):
+        endview = Toplevel()
+        endview.title("end of directory reached!")
+        text = Message(endview, text="END OF DIRECTORY", bg="white")
+        text.pack()
+        self.center(endview)
+        endview.lift()
+
     def activelabels(self,active):
         if active == 1:
             self.currentLabel = 0
@@ -339,7 +347,6 @@ class LabelTool():
         self._x = event.x
 
     def drag(self, event):
-
         if (self._y - event.y < 0):
             self.yoffset += 10
             self.mainPanel.move(ALL, 0, 10)
@@ -470,6 +477,8 @@ class LabelTool():
         if self.cur < self.total:
             self.cur += 1
             self.loadImage()
+        else:
+            self.showEnd()
 
     def gotoImage(self):
         idx = int(self.idxEntry.get())
