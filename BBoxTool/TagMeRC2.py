@@ -23,7 +23,7 @@ BASE = RAISED
 SELECTED = FLAT
 
 # colors for the bboxes
-COLORS = ['red', 'yellow', 'DarkOrange1', 'green', 'green3', 'DarkSlateGray4', 'blue', 'cyan', 'orchid1', 'maroon4'] #max of 10 classes for now
+COLORS = ['red', 'peru', 'DarkOrange1', 'green', 'green3', 'DarkSlateGray4', 'blue', 'cyan', 'orchid1', 'maroon4'] #max of 10 classes for now
 # image sizes for the examples
 SIZE = 256, 256
 
@@ -100,7 +100,7 @@ class LabelTool():
         self.help = Button(self.frame, text='Help', command= self.showhelp)
         self.help.grid(row=4, column=2, sticky=W+E+N)
         # dir entry & load
-        self.ldBtn = Button(self.frame, text="Load Directory",bg='yellow', command=self.loadDir)  # command
+        self.ldBtn = Button(self.frame, text="Load Directory",bg='peru', command=self.loadDir)  # command
         self.ldBtn.grid(row=5, column=2, sticky=W+E+N)
 
         #bbox label and save
@@ -143,6 +143,8 @@ class LabelTool():
         self.frame.rowconfigure(4, weight = 1)
 
         self.splash()
+        self.center(self.parent)
+        self.showhelp()
 
     def splash(self):
         raw_img = Image.open("./Images/001/splash.jpg") #SPLASH SCREEN SOURCE GOES HERE
@@ -162,43 +164,12 @@ class LabelTool():
     def showhelp(self):
         helpview = Toplevel()
         helpview.title("TAGME TOOL INSTRUCTIONS:")
-        instructions = "1) Click on 'Load directory'. \n" \
-                       "\t Go to a directory and click on either a video or an image.\n"\
-                       "\t Videos and images must be in their own folder.\n\n" \
-                       "2) If you are selecting images, please skip this step.\n" \
-                       "\t After selecting a video, a pop-up will come up.\n" \
-                       "\t Enter the frames per second, and the beginning and ending time frame that you would like. \n"\
-                       "\t A faster frame rate and a longer time will result in a longer time to load. The load may take a few minutes.\n\n" \
-                       "3) Enter your labels.\n" \
-                       "\t Keep in mind that this action CANNOT be repeated and you will be unable to add additional labels,\n " \
-                       "\t so make sure that you enter all object names from the beginning. When you are done, click 'Save Labels'.\n\n" \
-                       "4) Draw bounding boxes around your object.\n" \
-                       "\t Each label has a corresponding color.\n" \
-                       "\t To switch between labels either click on the label itself or select the corresponding number on your keyboard.\n" \
-                       "\t Go back and forth between frames by clicking the arrow keys on your keypad, or 'a', 'd'.\n" \
-                       "\t Make sure to not draw bounding boxes around something that would be very difficult for you to recognize. \n" \
-                       "\t Keep in mind that the software will be no smarter than you. If you cannot recognize it, neither can the software.\n\n" \
-                       "5) Exit TagMe when done.\n" \
-                       "\t Saving is done automatically when you move to a new frame, so when you are done, \n" \
-                       "\t simply click 'next' to ensure there are no more images, then exit TagMe. \n" \
-                       "\t Make sure to double check your work. If you accidentally click out, it is no problem. \n" \
-                       "\t Your progress will be saved and you can pick up where you left off.\n\n" \
-                       "6) Upload Data. \n" \
-                       "\t When you are completely finished labeling your images, zip your folder that contains your images \n " \
-                       "\t and a newly created 'labels' folder within. \n" \
-                       "\t This zipped file can then be uploaded to our server to be trained on your custom brain.\n" \
-                       "\t Once training is complete, it will be sent back to you.\n\n" \
-                       "Useful hotkeys:\n" \
-                       "Scroll wheel to zoom in and out \n" \
-                       "'a' or left arrow = prev frame\n" \
-                       "'d' or right arrow = next frame\n" \
-                       "'z' = undo\n" \
-                       "'c' = clear\n" \
-                       "1-0 = switch labels\n" \
-                       "'s' = manual save\n"
+        with open('./Images/001/instructions.txt', 'r') as myfile:
+            instructions = myfile.read()
         text = Message(helpview, text=instructions, bg="white")
         text.pack()
         self.center(helpview)
+        helpview.lift()
 
     def activelabels(self,active):
         if active == 1:
@@ -522,7 +493,6 @@ class LabelTool():
     def createlabels(self):
         labelfile = os.path.join(self.outDir, "labels.txt")
         i=0
-        self.labelsave.config(bg='gray76',state=DISABLED)
         self.bindCanvasTools()
 
         with open(labelfile, 'w') as f:
@@ -539,6 +509,7 @@ class LabelTool():
         for buttons in self.classbuttons:
             buttons.config(bg=COLORS[i], state=NORMAL)
             i+=1
+        self.labelsave.config(bg='gray76',state=DISABLED)
         print "saved labels! " +labelfile
 
     def bindCanvasTools(self):

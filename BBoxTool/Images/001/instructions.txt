@@ -1,0 +1,42 @@
+
+PLEASE READ BEFORE PROCEEDING
+
+1) Click on 'Load directory'. 
+  Go to a directory and click on either a video or an image.
+  Videos and images must be in their own folder.
+  
+2) If you are selecting images, please skip this step.
+  After selecting a video, a pop-up will come up.
+  Enter the frames per second, and the beginning and ending time frame that you would like. 
+  A faster frame rate and a longer time will result in a longer time to load. The load may take a few minutes.
+
+3) Enter your labels.
+  Keep in mind that this action CANNOT be repeated and you will be unable to add additional labels,
+  so make sure that you enter all object names from the beginning. When you are done, click 'Save Labels'.
+
+4) Draw bounding boxes around your object.
+  Each label has a corresponding color.
+  To switch between labels either click on the label itself or select the corresponding number on your keyboard.
+  Go back and forth between frames by clicking the arrow keys on your keypad, or 'a', 'd'.
+  Make sure to not draw bounding boxes around something that would be very difficult for you to recognize. 
+  Keep in mind that the software will be no smarter than you. If you cannot recognize it, neither can the software.
+
+5) Exit TagMe when done.
+  Saving is done automatically when you move to a new frame, so when you are done, 
+  simply click 'next' to ensure there are no more images, then exit TagMe. 
+  Make sure to double check your work. If you accidentally click out, it is no problem. 
+  Your progress will be saved and you can pick up where you left off.
+
+6) Upload Data. 
+  When you are completely finished labeling your images, zip your folder that contains your images 
+  and a newly created 'labels' folder within. 
+  This zipped file can then be uploaded to our server to be trained on your custom brain.
+  Once training is complete, it will be sent back to you.
+
+Useful hotkeys:
+  Scroll wheel to zoom in and out 
+  'd' or right arrow = next frame
+  'z' = undo
+  'c' = clear
+  1-0 = switch labels
+  's' = manual save
