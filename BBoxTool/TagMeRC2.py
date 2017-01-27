@@ -5,7 +5,7 @@
 # Company:     Neurala Inc.
 # Created:     9/01/2016
 # Last updated by: Lucas Neves
-# Last updated: 10/10/2016
+# Last updated: 1/26/2017
 #-------------------------------------------------------------------------------
 from __future__ import division
 
@@ -32,7 +32,7 @@ class LabelTool():
 
         # set up the main frame
         self.parent = master
-        self.parent.title("LabelTool")
+        self.parent.title("Neurala TagMeTool")
         self.frame = Frame(self.parent)
         self.frame.pack(fill=BOTH, expand=True)
         self.parent.resizable(width = True, height = True)
@@ -161,7 +161,7 @@ class LabelTool():
 
     def showhelp(self):
         helpview = Toplevel()
-        helpview.title("TAGME INSTRUCTIONS:")
+        helpview.title("TAGME TOOL INSTRUCTIONS:")
         instructions = "1) Click on 'Load directory'. \n" \
                        "\t Go to a directory and click on either a video or an image.\n"\
                        "\t Videos and images must be in their own folder.\n\n" \
