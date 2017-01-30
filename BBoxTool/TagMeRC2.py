@@ -79,13 +79,13 @@ class LabelTool():
         self.lb1.grid(row = 1, column = 1,  sticky = W+N)
         self.listbox = Listbox(self.frame, width = 24, height = 12)
         self.listbox.grid(row = 2, column = 1, sticky = N)
-        self.activelabel = Label(self.frame, text='Active Label: '+str(self.currentLabel+1),bg=COLORS[self.currentLabel])
+        self.activelabel = Label(self.frame, text='Active Label: '+str(self.currentLabel+1))
         self.activelabel.grid(row=3,column=1,sticky=W+E+N)
         #help button
         self.help = Button(self.frame, text='Help', command= self.showhelp)
         self.help.grid(row=4, column=1, sticky=W+E+N)
         # dir entry & load
-        self.ldBtn = Button(self.frame, text="Load Directory",bg='peru', command=self.loadDir)  # command
+        self.ldBtn = Button(self.frame, text="Load Directory",bg='red', command=self.loadDir)  # command
         self.ldBtn.grid(row=5, column=1, sticky=W+E+N)
 
         #bbox label and save
@@ -216,7 +216,7 @@ class LabelTool():
         if not os.path.exists(self.outDir):
             os.mkdir(self.outDir)
             for labels in self.classlist:
-                labels.config(bg='yellow')
+                labels.config(bg='yellow',state=NORMAL)
             self.labelsave.config(bg='green', state=NORMAL)
         else:
             self.loadlabels()
@@ -224,8 +224,7 @@ class LabelTool():
             for buttons in self.classbuttons:
                 buttons.config(bg=COLORS[i], state=NORMAL)
                 i += 1
-
-        self.loadImage()
+            self.loadImage() #only load image if alread initialized folder
 
         self.ldBtn.config(state=DISABLED, bg='gray76')
 
@@ -347,7 +346,7 @@ class LabelTool():
 #defines classes
     def classdefine(self):
         for i in range(0, 10):
-            lbl = Entry(self.labelentry, bg="white")
+            lbl = Entry(self.labelentry, bg="white",state=DISABLED)
             lbl.insert(END, self.classnames[i])
             lbl.grid(row=i+1, column=2, sticky=W+E)
             self.classlist.append(lbl)
@@ -377,13 +376,14 @@ class LabelTool():
             buttons.config(bg=COLORS[i], state=NORMAL)
             i+=1
         self.labelsave.config(bg='gray76',state=DISABLED)
+        self.loadImage() #only load image if alread initialized folder
         print "saved labels! " +labelfile
 
 #unlocks the gui tools
     def bindCanvasTools(self):
 
         self.mainPanel.bindInterface()
-
+        self.activelabel.config(bg=COLORS[self.currentLabel])
         self.undo.config(state=NORMAL)
         self.btnDel.config(state=NORMAL)
         self.btnClear.config(state=NORMAL)
