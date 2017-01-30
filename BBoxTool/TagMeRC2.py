@@ -12,7 +12,6 @@ from __future__ import division
 from Tkinter import *
 import tkFileDialog as filedialog
 from PIL import Image, ImageTk
-import cv2
 import time
 import os
 import glob
