@@ -35,8 +35,10 @@ class mainwindow():
         self.img_id = None
 
         #zoom and pan positional data
-        self.xoffset=0.0
-        self.yoffset=0.0
+        self.xoffset = 0.0
+        self.yoffset = 0.0
+        self._y = 0.0
+        self._x = 0.0
         self.scaleimg = None
         self.currentImage = None
 
@@ -72,6 +74,8 @@ class mainwindow():
         self.idxEntry.config(bg='white')
         self.goBtn = Button(self.ctrPanel, text='Go', state=DISABLED, command = self.parent.gotoImage)
         self.goBtn.pack(side = LEFT)
+        self.resetBtn = Button(self.ctrPanel, text= 'reset view', command = self.resetView)
+        self.resetBtn.pack(side = LEFT)
         # display mouse position
         self.disp = Label(self.ctrPanel, text='')
         self.disp.pack(side = RIGHT)
@@ -97,6 +101,8 @@ class mainwindow():
     def bindInterface(self):
         self.mainPanel.bind("<Button-1>", self.mouseClick)
         self.mainPanel.bind("<ButtonRelease-1>", self.mouseRelease)
+        self.mainPanel.bind("<Button-2>", self.grab)
+        self.mainPanel.bind("<B3-Motion>", self.drag)
         self.mainPanel.bind("<Motion>", self.mouseMove)
         self.mainPanel.bind("<Escape>", self.cancelBBox)  # press <Escape> to cancel current bbox self.cancelBBox
         self.mainPanel.bind("<Key>", self.hotkeys)
@@ -114,16 +120,38 @@ class mainwindow():
         if self.STATE['click'] == 1:
             x1, x2 = min(self.STATE['x'], event.x), max(self.STATE['x'], event.x)
             y1, y2 = min(self.STATE['y'], event.y), max(self.STATE['y'], event.y)
+            x1 = x1 - self.xoffset
+            x2 = x2 - self.xoffset
+            y1 = y1 - self.yoffset
+            y2 = y2 - self.yoffset
 
             self.mainPanel.itemconfig(self.bboxId, dash=(2,2))
-            self.parent.bboxIdList.append(self.bboxId)
-            width= x2-x1
-            height= y2-y1
-            self.parent.bboxList.append((self.parent.currentLabel, float((x1+(width/2.0)) / self.tkimg.width()), float((y1+(height/2.0)) / self.tkimg.height()),
-                                  float(width / self.tkimg.width()), float(height / self.tkimg.height())))
 
+
+            Floatvals =[]
+            Floatvals.append(float(x1 / self.tkimg.width()))
+            Floatvals.append(float(y1 / self.tkimg.height()))
+            Floatvals.append(float(x2 / self.tkimg.width()))
+            Floatvals.append(float(y2 / self.tkimg.height()))
+            for i in range(0,len(Floatvals)):
+                if Floatvals[i] > 1.0:
+                    self.cancelBBox(event)
+                    print "box out of bounds!!!"
+                    return
+                elif Floatvals[i] < 0.0:
+                    self.cancelBBox(event)
+                    print "box out of bounds!!!"
+                    return
+
+            self.parent.bboxIdList.append(self.bboxId)
+            width= Floatvals[2]-Floatvals[0] #x2-x1
+            height= Floatvals[3]-Floatvals[1] #y2-y1
+            centerx = Floatvals[0]+(width/2.0) #x1+w/2
+            centery = Floatvals[1]+(height/2.0) #y1+h/2
+
+            self.parent.bboxList.append((self.parent.currentLabel, centerx, centery, width, height))
             self.bboxId = None
-            self.parent.listbox.insert(END, '(%d, %d) -> (%d, %d)' % (x1, y1, x2, y2))
+            self.parent.listbox.insert(END, '(%f, %f) -> (%f, %f)' % (centerx, centery, width, height)) #need to set precision here
             self.parent.listbox.itemconfig(len(self.parent.bboxIdList) - 1, fg=COLORS[self.parent.currentLabel])
             self.STATE['click']=0
 
@@ -190,14 +218,14 @@ class mainwindow():
             self.parent.saveImage()
         self.parent.activelabel.config(text='Active Label: '+str(self.parent.currentLabel+1),bg=COLORS[self.parent.currentLabel])
     def zoom(self, event):
-
-        self.mainPanel.move(ALL, -self.xoffset, -self.yoffset)
-        if event.num == 4 or event.delta == 120:
-            self.scale *= 1.1
-            self.mainPanel.scale(ALL, 0, 0, 1.1, 1.1)
+        # self.mainPanel.move(ALL, -self.xoffset, -self.yoffset)
+        if(self.scale < 3.0): #hard limit of 3x zoom to avoid excessive memory usage
+            if event.num == 4 or event.delta == 120:
+                self.scale *= 1.1
+                self.mainPanel.scale(ALL, self.xoffset, self.yoffset, 1.1, 1.1)
         if event.num == 5 or event.delta == -120:
             self.scale *= 0.9
-            self.mainPanel.scale(ALL, 0, 0, 0.9, 0.9)
+            self.mainPanel.scale(ALL,self.xoffset, self.yoffset, 0.9, 0.9)
 
         self.redraw()
 
@@ -211,10 +239,15 @@ class mainwindow():
         size = int(iw * self.scale), int(ih * self.scale)
         print size
         self.tkimg = ImageTk.PhotoImage(image=self.orig_img.resize(size))
-
-        self.img_id = self.mainPanel.create_image(x, y, image=self.tkimg, anchor=NW)
+        # self.mainPanel.move(ALL, self._x, self._y)
+        self.img_id = self.mainPanel.create_image(self.xoffset, self.yoffset, image=self.tkimg, anchor=NW)
         self.mainPanel.tag_lower(self.img_id)
-        self.mainPanel.move(ALL, self.xoffset, self.yoffset)
+
+    def resetView(self):
+        self.scale = 1.0
+        self.parent.saveImage()
+        self.parent.loadImage()
+        self.redraw()
 
     def grab(self, event):
         self._y = event.y
@@ -223,23 +256,22 @@ class mainwindow():
     def drag(self, event):
 
         if (self._y - event.y < 0):
-            self.yoffset += 10
-            self.mainPanel.move(ALL, 0, 10)
+            self.yoffset += 1
+            self.mainPanel.move(ALL, 0, 1)
         elif (self._y - event.y > 0):
-            self.yoffset -= 10
-            self.mainPanel.move(ALL, 0, -10)
+            self.yoffset -= 1
+            self.mainPanel.move(ALL, 0, -1)
         if (self._x - event.x < 0):
-            self.xoffset += 10
-            self.mainPanel.move(ALL, 10, 0)
+            self.xoffset += 1
+            self.mainPanel.move(ALL, 1, 0)
         elif (self._x - event.x > 0):
-            self.xoffset -= 10
-            self.mainPanel.move(ALL, -10, 0)
+            self.xoffset -= 1
+            self.mainPanel.move(ALL, -1, 0)
 
-        if self.img_id:
-            self.mainPanel.delete(self.img_id)
-
-        self.img_id = self.mainPanel.create_image(self.xoffset, self.yoffset, image=self.img, anchor=NW)
-        self.mainPanel.tag_lower(self.img_id)
+        # if self.img_id:
+        #     self.mainPanel.delete(self.img_id)
+        #
+        # self.redraw()
 
         self._x = event.x
         self._y = event.y

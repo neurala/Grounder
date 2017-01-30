@@ -117,19 +117,23 @@ class LabelTool():
         self.mainPanel = mainwindow(self)
 
 
-        self.center(self.parent)
-        self.center(self.mainPanel.frame)
+
+        self.center(self.mainPanel.frame,False)
+        self.center(self.parent,True)
         self.showhelp()
 
 
 
-    def center(self,toplevel):
+    def center(self,toplevel,offset):
         toplevel.update_idletasks()
         w = toplevel.winfo_screenwidth()
         h = toplevel.winfo_screenheight()
         size = tuple(int(_) for _ in toplevel.geometry().split('+')[0].split('x'))
         x = w / 2 - size[0] / 2
         y = h / 2 - size[1] / 2
+        if(offset ==True):
+            x -= (self.parent.winfo_width()/2)
+            x += self.mainPanel.tkimg.width()
         toplevel.geometry("%dx%d+%d+%d" % (size + (x, y)))
 
     def showhelp(self):
@@ -139,7 +143,7 @@ class LabelTool():
             instructions = myfile.read()
         text = Message(helpview, text=instructions, bg="white")
         text.pack()
-        self.center(helpview)
+        self.center(helpview,False)
         helpview.lift()
 
     def showEnd(self):
@@ -258,6 +262,8 @@ class LabelTool():
         imagepath = self.imageList[self.cur - 1]
 
         self.mainPanel.loadImage(imagepath)
+        self.mainPanel.xoffset = 0.0
+        self.mainPanel.yoffset = 0.0
 
         self.imagename = os.path.split(imagepath)[-1].split('.')[0]
         labelname = self.imagename + '.txt'
