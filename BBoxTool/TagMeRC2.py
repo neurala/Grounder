@@ -38,6 +38,7 @@ class LabelTool():
         self.parent.resizable(width=False, height=False)
         self.frame.pack(fill=BOTH, expand=False)
 
+
         # initialize global state
         self.imageDir = ''
         self.imageList= []
@@ -64,13 +65,12 @@ class LabelTool():
 
         self.tree = None
 
-
         self.img = None
-
 
         #popup windows
         self.top = None
-        self.video_processing_window = None
+        self.endview= None # end of directory popup
+        self.video_processing_window = None #inactive video processing popup
 
         # ----------------- GUI stuff ---------------------
 
@@ -117,25 +117,30 @@ class LabelTool():
         self.mainPanel = mainwindow(self)
 
 
-
+        #initialize and center frames
         self.center(self.mainPanel.frame,False)
         self.center(self.parent,True)
         self.showhelp()
 
 
-
+ #function to center a window in the screen
     def center(self,toplevel,offset):
         toplevel.update_idletasks()
+        #get screen resolution
         w = toplevel.winfo_screenwidth()
         h = toplevel.winfo_screenheight()
+        #get window size
         size = tuple(int(_) for _ in toplevel.geometry().split('+')[0].split('x'))
+        #compute center
         x = w / 2 - size[0] / 2
         y = h / 2 - size[1] / 2
+        #if offset is desired apply a right shift
         if(offset ==True):
             x -= (self.parent.winfo_width()/2)
             x += self.mainPanel.tkimg.width()
         toplevel.geometry("%dx%d+%d+%d" % (size + (x, y)))
 
+#display the help popup and instructions
     def showhelp(self):
         helpview = Toplevel()
         helpview.title("TAGME TOOL INSTRUCTIONS:")
@@ -146,14 +151,18 @@ class LabelTool():
         self.center(helpview,False)
         helpview.lift()
 
+#display the end of directory popup message
     def showEnd(self):
-        endview = Toplevel()
-        endview.title("end of directory reached!")
-        text = Message(endview, text="END OF DIRECTORY", bg="white")
-        text.pack()
-        self.center(endview)
-        endview.lift()
+        if self.endview:
+            return
+        else:
+            self.endview = Toplevel()
+            self.endview.title("END OF DIRECTORY")
+            text = Message(self.endview, text="end of directory reached!", bg="white")
+            text.pack()
+            self.center(self.endview,False)
 
+# switches state between the active class label
     def activelabels(self,active):
         if active == 1:
             self.currentLabel = 0
@@ -177,8 +186,7 @@ class LabelTool():
             self.currentLabel = 9
         self.activelabel.config(text='Active Label: ' + str(self.currentLabel + 1), bg=COLORS[self.currentLabel])
 
-
-
+#opens popup and loads selected directory of images
     def loadDir(self, dbg=False):
         #open dialog box to select data, allow only image files
         filepath = os.path.realpath(filedialog.askopenfilename(filetypes=[('data','.jpg .png .JPEG .PNG')]))
@@ -223,6 +231,7 @@ class LabelTool():
 
         print ' Annotations will be saved to: %s' %(self.outDir)
 
+#read existing labels and unlock gui tools
     def loadlabels(self):
         labelfile = os.path.join(self.outDir, "labels.txt")
         if os.path.exists(labelfile):
@@ -232,8 +241,10 @@ class LabelTool():
                     self.classlist[i].insert(END, label.rstrip('\n'))
                     self.classlist[i].config(state=DISABLED)
                     i += 1
+            #unlocks gui tools
             self.bindCanvasTools()
 
+#read an existing label file for given image
     def readfile(self): #use  plaintext parsing
         # load labels
         self.clearBBox()
@@ -245,6 +256,7 @@ class LabelTool():
                     print str(self.mainPanel.tkimg.width())
                     self.bboxList.append(row)
 
+                    #convert from center,width, height to top left, bottom right
                     x1 = int((float(row[1])-(float(row[3])/2.0)) * self.mainPanel.tkimg.width())
                     y1 = int((float(row[2])-(float(row[4])/2.0)) * self.mainPanel.tkimg.height())
                     x2 = int((float(row[1])+(float(row[3])/2.0)) * self.mainPanel.tkimg.width())
@@ -257,6 +269,7 @@ class LabelTool():
                                             fg=COLORS[int(row[0])])
                 self.mainPanel.mainPanel.scale(ALL, 0, 0, self.mainPanel.scale, self.mainPanel.scale)
 
+#load the current image to buffer and display onscreen
     def loadImage(self):
         # load image
         imagepath = self.imageList[self.cur - 1]
@@ -272,6 +285,7 @@ class LabelTool():
             self.readfile()
         self.mainPanel.redraw()
 
+#Save tagged data from current frame to file
     def saveImage(self):
         with open(self.labelfilename, 'w') as f:
             for bbox in self.bboxList:
@@ -283,7 +297,7 @@ class LabelTool():
             f.close()
         print 'Image No. %d saved to %s' % (self.cur, self.labelfilename)
 
-
+#delete the selected bounding box
     def delBBox(self,last = False):
         if last:
             sel = len(self.bboxList)-1
@@ -301,19 +315,20 @@ class LabelTool():
         self.bboxList.pop(idx)
         self.listbox.delete(idx)
 
+#clear all bounding boxes for the given image
     def clearBBox(self):
         for idx in range(len(self.bboxIdList)):
             self.mainPanel.mainPanel.delete(self.bboxIdList[idx])
         self.listbox.delete(0, len(self.bboxList))
         self.bboxIdList = []
         self.bboxList = []
-
+#go back a frame
     def prevImage(self, event = None):
         self.saveImage() #make this switch xml contexts
         if self.cur > 1:
             self.cur -= 1
             self.loadImage()
-
+#go forwards a frame
     def nextImage(self, event = None):
         self.saveImage()
         if self.cur < self.total:
@@ -321,7 +336,7 @@ class LabelTool():
             self.loadImage()
         else:
             self.showEnd()
-
+#jump to image number provided
     def gotoImage(self):
         idx = int(self.idxEntry.get())
         if 1 <= idx and idx <= self.total:
@@ -329,6 +344,7 @@ class LabelTool():
             self.cur = idx
             self.loadImage()
 
+#defines classes
     def classdefine(self):
         for i in range(0, 10):
             lbl = Entry(self.labelentry, bg="white")
@@ -341,11 +357,11 @@ class LabelTool():
         self.labelsave = Button(self.labelentry, text="Save labels", state=DISABLED, command=self.createlabels)
         self.labelsave.grid(row=12, column=2, sticky=N+S+E+W)
 
+#create labels file from gui input and unlock gui tools
     def createlabels(self):
         labelfile = os.path.join(self.outDir, "labels.txt")
         i=0
         self.bindCanvasTools()
-
         with open(labelfile, 'w') as f:
             print len(self.classlist)
             for labels in self.classlist:
@@ -363,6 +379,7 @@ class LabelTool():
         self.labelsave.config(bg='gray76',state=DISABLED)
         print "saved labels! " +labelfile
 
+#unlocks the gui tools
     def bindCanvasTools(self):
 
         self.mainPanel.bindInterface()
@@ -374,7 +391,7 @@ class LabelTool():
         self.nextBtn.config(state=NORMAL)
 
 
-
+#main
 if __name__ == '__main__':
     root = Tk()
     tool = LabelTool(root)
