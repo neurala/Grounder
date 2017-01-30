@@ -28,7 +28,8 @@ class mainwindow():
 
         self.frame.protocol('WM_DELETE_WINDOW', self.doSomething)  # root is your root window
 
-        self.scale = 1.0
+        #set initial scale
+        self.scale = 0.5
 
         self.orig_img = None
         self.img_id = None
@@ -126,7 +127,6 @@ class mainwindow():
 
             self.mainPanel.itemconfig(self.bboxId, dash=(2,2))
 
-
             Floatvals =[]
             Floatvals.append(float(x1 / self.tkimg.width()))
             Floatvals.append(float(y1 / self.tkimg.height()))
@@ -206,7 +206,7 @@ class mainwindow():
         elif event.char == "0":
             self.parent.activelabels(10)
         elif event.char == "c":
-            self.clearBBox()
+            self.parent.clearBBox()
         elif event.char == "a":
             self.parent.prevImage()
         elif event.char == "d":
@@ -279,6 +279,11 @@ class mainwindow():
         self.img = Image.open(imagepath)
         self.tkimg = ImageTk.PhotoImage(self.img)
         self.orig_img = self.img
+        if self.tkimg.width() < 640:
+            self.scale = 1.0
+        else:
+            if self.scale > 0.5:
+                self.scale = 0.5
         #.mainPanel.config(width=max(self.tkimg.width(), 400), height = max(self.tkimg.height(), 400))
         self.mainPanel.create_image(0, 0, image=self.tkimg, anchor=NW)
         self.progLabel.config(text="%04d/%04d" % (self.parent.cur, self.parent.total))
