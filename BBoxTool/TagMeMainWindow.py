@@ -23,10 +23,15 @@ class mainwindow():
 
         self.frame.columnconfigure(1, weight = 1)
         self.frame.rowconfigure(14, weight = 1)
-
+        if(os.name =='nt'):
+            iconpath = os.path.realpath("./Images/001/logo.ico")
+            self.frame.iconbitmap(iconpath)
         self.tkimg = None
 
         self.frame.protocol('WM_DELETE_WINDOW', self.doSomething)  # root is your root window
+
+
+
 
         #set initial scale
         self.scale = 0.5
@@ -60,13 +65,12 @@ class mainwindow():
         self.mainPanel = Canvas(self.outerFrame,width=400, height=400, bd=0, cursor='tcross')
         self.mainPanel.pack(fill="both", expand=True)
 
-
         self.ctrPanel = Frame(self.outerFrame)
-        self.ctrPanel.pack(fill="both", expand=True)
+        self.ctrPanel.pack(fill="both", expand=False)
         self.progLabel = Label(self.ctrPanel, text = "Progress:     /    ")
-        self.progLabel.pack(side = LEFT, padx = 5)
+        self.progLabel.pack(side = LEFT, padx = 5, expand=False)
         self.tmpLabel = Label(self.ctrPanel, text = "Go to Image No.")
-        self.tmpLabel.pack(side = LEFT, padx = 5)
+        self.tmpLabel.pack(side = LEFT, padx = 5, expand=False)
 
 
         self.idxEntry = Entry(self.ctrPanel, width = 5)
@@ -85,7 +89,7 @@ class mainwindow():
         self.splash()
 
     def resizeWindow(self, event):
-        self.mainPanel.config( width = max(event.width-4,self.initW), height = max(event.height-4,self.inith))
+        self.mainPanel.config(width = max(event.width-4,self.initW), height = max(event.height-4,self.inith))
 
     def splash(self):
         raw_img = Image.open("./Images/001/splash.jpg") #SPLASH SCREEN SOURCE GOES HERE
@@ -94,8 +98,9 @@ class mainwindow():
         self.inith = self.tkimg.height()
         self.mainPanel.config(width=max(self.tkimg.width(), 400), height=max(self.tkimg.height(), 400))
         self.mainPanel.create_image(0, 0, image=self.tkimg, anchor=NW)
-        self.mainPanel.bind('<Configure>', self.resizeWindow)
-        self.frame.update()
+        if(os.name !="nt"):
+            self.mainPanel.bind('<Configure>', self.resizeWindow)
+            self.frame.update()
         self.frame.minsize(width=self.initW, height=self.inith+30)
 
     def bindInterface(self):
@@ -161,7 +166,7 @@ class mainwindow():
 
     def mouseMove(self, event):
         self.disp.config(text = 'x: %d, y: %d' %(event.x, event.y))
-        self.mainPanel.focus_set()
+        # self.mainPanel.focus_set()
         if self.tkimg:
             if self.hl:
                 self.mainPanel.delete(self.hl)
@@ -216,6 +221,7 @@ class mainwindow():
         elif event.char == 's':
             self.parent.saveImage()
         self.parent.activelabel.config(text='Active Label: '+str(self.parent.currentLabel+1),bg=COLORS[self.parent.currentLabel])
+
     def zoom(self, event):
         # self.mainPanel.move(ALL, -self.xoffset, -self.yoffset)
         if(self.scale < 3.0): #hard limit of 3x zoom to avoid excessive memory usage
@@ -253,7 +259,6 @@ class mainwindow():
         self._x = event.x
 
     def drag(self, event):
-
         if (self._y - event.y < 0):
             self.yoffset += 1
             self.mainPanel.move(ALL, 0, 1)

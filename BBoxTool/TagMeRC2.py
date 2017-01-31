@@ -36,8 +36,9 @@ class LabelTool():
         self.frame = Frame(self.parent)
         self.parent.resizable(width=False, height=False)
         self.frame.pack(fill=BOTH, expand=False)
-
-
+        if(os.name =='nt'):
+            iconpath = os.path.realpath("./Images/001/logo.ico")
+            self.parent.iconbitmap(iconpath)
         # initialize global state
         self.imageDir = ''
         self.imageList= []
@@ -142,6 +143,11 @@ class LabelTool():
 #display the help popup and instructions
     def showhelp(self):
         helpview = Toplevel()
+
+        if(os.name =='nt'):
+            iconpath = os.path.realpath("./Images/001/logo.ico")
+            helpview.iconbitmap(iconpath)
+
         helpview.title("TAGME TOOL INSTRUCTIONS:")
         with open('./Images/001/instructions.txt', 'r') as myfile:
             instructions = myfile.read()
@@ -156,9 +162,12 @@ class LabelTool():
             return
         else:
             self.endview = Toplevel()
+            if(os.name =='nt'):
+                iconpath = os.path.realpath("./Images/001/logo.ico")
+                self.endview.iconbitmap(iconpath)
             self.endview.title("END OF DIRECTORY")
-            text = Message(self.endview, text="end of directory reached!", bg="white")
-            text.pack()
+            text = Message(self.endview, text="End of directory!", bg="white",anchor=NE,aspect=600)
+            text.pack(side = LEFT, fill="x")
             self.center(self.endview,False)
 
 # switches state between the active class label
