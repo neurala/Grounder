@@ -28,7 +28,7 @@ class mainwindow():
             self.frame.iconbitmap(iconpath)
         self.tkimg = None
 
-        self.frame.protocol('WM_DELETE_WINDOW', self.doSomething)  # root is your root window
+        self.frame.protocol('WM_DELETE_WINDOW', self.shutdown)  # root is your root window
 
 
 
@@ -76,10 +76,15 @@ class mainwindow():
         self.idxEntry = Entry(self.ctrPanel, width = 5)
         self.idxEntry.pack(side = LEFT)
         self.idxEntry.config(bg='white')
-        self.goBtn = Button(self.ctrPanel, text='Go', state=DISABLED, command = self.parent.gotoImage)
+        self.goBtn = Button(self.ctrPanel, text='Go', state=DISABLED, command = self.gotoImage)
         self.goBtn.pack(side = LEFT)
-        self.resetBtn = Button(self.ctrPanel, text= 'reset view', command = self.resetView)
+        self.resetBtn = Button(self.ctrPanel, text= 'reset view',state=DISABLED,  command = self.resetView)
         self.resetBtn.pack(side = LEFT)
+        self.prevBtn = Button(self.ctrPanel, text='<< Prev', state=DISABLED, command = self.parent.prevImage)
+        self.prevBtn.pack(side = LEFT)
+        self.nextBtn = Button(self.ctrPanel, text='Next >>',state=DISABLED, command = self.parent.nextImage)
+        self.nextBtn.pack(side = LEFT)
+
         # display mouse position
         self.disp = Label(self.ctrPanel, text='')
         self.disp.pack(side = RIGHT)
@@ -120,6 +125,17 @@ class mainwindow():
         self.mainPanel.bind("<Right>", self.parent.nextImage)
         self.mainPanel.bind("<MouseWheel>", self.zoom)
         self.goBtn.config(state=NORMAL)
+        self.resetBtn.config(state=NORMAL)
+        self.prevBtn.config(state=NORMAL)
+        self.nextBtn.config(state=NORMAL)
+
+#jump to image number provided
+    def gotoImage(self):
+        idx = int(self.idxEntry.get())
+        if 1 <= idx and idx <= self.parent.total:
+            self.parent.saveImage()
+            self.parent.cur = idx
+            self.parent.loadImage()
 
     def mouseRelease(self,event):
         if self.STATE['click'] == 1:
@@ -295,5 +311,5 @@ class mainwindow():
         self.parent.clearBBox()
 
 
-    def doSomething(self):
-        print "You can't do that"
+    def shutdown(self):
+        self.parent.parent.destroy() #close out and exit application
