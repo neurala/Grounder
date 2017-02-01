@@ -103,14 +103,6 @@ class LabelTool():
         self.btnClear = Button(self.frame, text = 'Clear All',state=DISABLED, command = self.clearBBox)
         self.btnClear.grid(row = 9, column = 1, sticky = W+E+S+N)
 
-        # control panel for image navigation
-
-        self.navpanel = Frame(self.frame)
-        self.navpanel.grid(row = 11, column = 1, columnspan = 2, sticky = W+E)
-        self.prevBtn = Button(self.navpanel, text='<< Prev', state=DISABLED, command = self.prevImage)
-        self.prevBtn.grid(row = 1, column = 1, sticky = W+E)
-        self.nextBtn = Button(self.navpanel, text='Next >>',state=DISABLED, command = self.nextImage)
-        self.nextBtn.grid(row = 1, column = 2, sticky = W+E)
 
 
         # main panel for labeling
@@ -343,13 +335,6 @@ class LabelTool():
             self.loadImage()
         else:
             self.showEnd()
-#jump to image number provided
-    def gotoImage(self):
-        idx = int(self.idxEntry.get())
-        if 1 <= idx and idx <= self.total:
-            self.saveImage()
-            self.cur = idx
-            self.loadImage()
 
 #defines classes
     def classdefine(self):
@@ -395,8 +380,7 @@ class LabelTool():
         self.undo.config(state=NORMAL)
         self.btnDel.config(state=NORMAL)
         self.btnClear.config(state=NORMAL)
-        self.prevBtn.config(state=NORMAL)
-        self.nextBtn.config(state=NORMAL)
+
 
 
 #main
