@@ -176,6 +176,7 @@ class mainwindow():
             self.STATE['click']=0
 
     def mouseClick(self, event):
+        self.mainPanel.focus_set()
         if self.STATE['click'] == 0:
             self.STATE['x'], self.STATE['y'] = event.x, event.y
             self.STATE['click'] =1
