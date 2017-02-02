@@ -107,7 +107,10 @@ class LabelTool():
         #initialize and center frames
         self.center(self.mainPanel.frame,False)
         self.center(self.parent,True)
-        self.showhelp()
+        self.nostartup = 1
+        if not os.path.exists("./helpcache.txt"):
+            self.nostartup=0
+            self.showhelp()
 
  #function to center a window in the screen
     def center(self,toplevel,offset):
@@ -139,9 +142,15 @@ class LabelTool():
             instructions = myfile.read()
         text = Message(helpview, text=instructions, bg="white")
         text.pack()
-
+        if self.nostartup ==0:
+            noStartup = Checkbutton(helpview,text="Don't show this again", variable=self.nostartup,command=self.cache)
+            noStartup.pack()
         self.center(helpview,False)
         helpview.lift()
+
+    def cache(self):
+        with open("./helpcache.txt", 'w') as f:
+            f.write("nohelp")
 
 #display the end of directory popup message
     def showEnd(self):
@@ -289,7 +298,6 @@ class LabelTool():
         if os.path.exists(self.labelfilename):
             self.readfile()
         self.mainPanel.redraw()
-
 #Save tagged data from current frame to file
     def saveImage(self):
         with open(self.labelfilename, 'w') as f:
@@ -301,7 +309,6 @@ class LabelTool():
                 f.write('\n')
             f.close()
         print 'Image No. %d saved to %s' % (self.cur, self.labelfilename)
-
 #delete the selected bounding box
     def delBBox(self,last = False):
         if last:
@@ -319,7 +326,6 @@ class LabelTool():
         self.bboxIdList.pop(idx)
         self.bboxList.pop(idx)
         self.listbox.delete(idx)
-
 #clear all bounding boxes for the given image
     def clearBBox(self):
         for idx in range(len(self.bboxIdList)):
@@ -341,7 +347,6 @@ class LabelTool():
             self.loadImage()
         else:
             self.showEnd()
-
 #defines classes
     def classdefine(self):
         for i in range(0, 10):
