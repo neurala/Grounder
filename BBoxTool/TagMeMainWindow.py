@@ -30,9 +30,6 @@ class mainwindow():
 
         self.frame.protocol('WM_DELETE_WINDOW', self.shutdown)  # root is your root window
 
-
-
-
         #set initial scale
         self.scale = 0.5
 
@@ -107,6 +104,7 @@ class mainwindow():
             self.mainPanel.bind('<Configure>', self.resizeWindow)
             self.frame.update()
         self.frame.minsize(width=self.initW, height=self.inith+30)
+        self.parent.clearBBox()
 
     def bindInterface(self):
         self.mainPanel.bind("<Button-1>", self.mouseClick)
@@ -288,11 +286,6 @@ class mainwindow():
         elif (self._x - event.x > 0):
             self.xoffset -= 1
             self.mainPanel.move(ALL, -1, 0)
-
-        # if self.img_id:
-        #     self.mainPanel.delete(self.img_id)
-        #
-        # self.redraw()
 
         self._x = event.x
         self._y = event.y
