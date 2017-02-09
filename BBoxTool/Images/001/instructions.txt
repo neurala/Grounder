@@ -3,30 +3,31 @@ PLEASE READ BEFORE PROCEEDING
 
 1) Click on 'Load directory'.
   Go to a directory and click on an image.
-  All images to be tagged must be in the same folder.
+  All images to be tagged must be in the same folder. 
+  However, when finished with one directory, you will be prompted to start a new project in a different directory.
 
 2) Enter your labels.
-  Keep in mind that this action CANNOT be repeated and you will be unable to add additional labels,
-  so make sure that you enter all object names from the beginning. When you are done, click 'Save Labels'.
+  Please, keep in mind that this action CANNOT be repeated and adding additional labels will be prohibited,
+  so please make sure that object names are entered from the beginning. When done, click 'Save Labels'.
 
-3) Draw bounding boxes around your object.
+3) Draw bounding boxes around your objects of interest.
   Each label has a corresponding color.
   To switch between labels either click on the label itself or select the corresponding number on your keyboard.
-  Go back and forth between frames by clicking the arrow keys on your keypad, or 'a', 'd'.
+  Switch between frames by clicking the arrow keys on your keypad, or 'a', 'd'.
   Make sure to not draw bounding boxes around something that would be very difficult for you to recognize.
   Keep in mind that the software will be no smarter than you. If you cannot recognize it, neither can the software.
 
-4) Exit TagMe when done.
-  Saving is done automatically when you move to a new frame. When you are done,
-  simply click 'next' to ensure there are no more images, then exit TagMe.
-  Make sure to double check your work. If you accidentally click out, it is no problem.
-  Your progress will be saved and you can pick up where you left off.
+4) Exit TagMe when done or start a new project.
+  Saving is done automatically when moving to a new frame. When done,
+  simply click 'next' to ensure there are no more images, then exit TagMe or start a new project.
+  Make sure to double check your images. If you accidentally exit, your data will be saved
+  and you can pick up where you left off.
 
 5) Upload Data.
-  When you are completely finished labeling your images, zip your folder that contains your images
-  and a newly created 'labels' folder within.
+  When you are completely finished labeling your images, zip your folder that contains the images
+  and the newly created 'labels' folder.
   This zipped file can then be uploaded to our server to be trained on your custom brain.
-  Once training is complete, a performance document will be sent back to you.
+  Once training is complete, a performance document will be sent back.
 
 CONTROLS:
   Scroll wheel to zoom in and out
