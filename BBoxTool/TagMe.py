@@ -108,7 +108,7 @@ class LabelTool():
         self.center(self.mainPanel.frame,False)
         self.center(self.parent,True)
         self.nostartup = 1
-        if not os.path.exists("./helpcache.txt"):
+        if not os.path.exists(os.join(os.getenv("HOME"), "TagMecache.txt")):
             self.nostartup=0
             self.showhelp()
 
@@ -149,7 +149,7 @@ class LabelTool():
         helpview.lift()
 
     def cache(self):
-        with open("./helpcache.txt", 'w') as f:
+        with open(os.join(os.getenv("HOME"), "TagMecache.txt"), 'w') as f:
             f.write("nohelp")
 
 #display the end of directory popup message
