@@ -395,6 +395,8 @@ class LabelTool():
     def reset(self):
         self.mainPanel.splash()
         self.endview.destroy()
+        self.endview = None
+        self.ldBtn.config(state=NORMAL, bg='red')
         self.loadDir()
 
 
