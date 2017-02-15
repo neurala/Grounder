@@ -17,7 +17,12 @@ import os
 import glob
 import csv
 import subprocess
+
+import shutil
+from threading import Thread
+
 from TagMeMainWindow import mainwindow
+from filePackage import filePackage
 
 BASE = RAISED
 SELECTED = FLAT
@@ -108,7 +113,7 @@ class LabelTool():
         self.center(self.mainPanel.frame,False)
         self.center(self.parent,True)
         self.nostartup = 1
-        if not os.path.exists(os.join(os.getenv("HOME"), "TagMecache.txt")):
+        if not os.path.exists(os.path.join(os.getenv("HOME"), "TagMecache.txt")):
             self.nostartup=0
             self.showhelp()
 
@@ -149,7 +154,7 @@ class LabelTool():
         helpview.lift()
 
     def cache(self):
-        with open(os.join(os.getenv("HOME"), "TagMecache.txt"), 'w') as f:
+        with open(os.path.join(os.getenv("HOME"), "TagMecache.txt"), 'w') as f:
             f.write("nohelp")
 
 #display the end of directory popup message
@@ -166,6 +171,8 @@ class LabelTool():
             text.pack(side = TOP, fill="x")
             restartBtn = Button(self.endview,text="new project", command =self.reset)
             restartBtn.pack(side = BOTTOM, fill="x")
+            uploadBtn = Button(self.endview,text="Compress and upload", command =self.upload)
+            uploadBtn.pack(side = BOTTOM, fill="x")
             shutdownBtn = Button(self.endview,text="Close and exit", command =self.parent.destroy)
             shutdownBtn.pack(side = BOTTOM, fill="x")
             self.center(self.endview,False)
@@ -398,7 +405,12 @@ class LabelTool():
         self.endview = None
         self.ldBtn.config(state=NORMAL, bg='red')
         self.loadDir()
-
+       
+    def upload(self):
+        pkg = filePackage(self.imageDir)
+        thrd =Thread(target=pkg.doCompression)
+        thrd.start()
+        
 
 #main
 if __name__ == '__main__':
