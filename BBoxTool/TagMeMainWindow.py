@@ -275,17 +275,17 @@ class mainwindow():
 
     def drag(self, event):
         if (self._y - event.y < 0):
-            self.yoffset += 1
-            self.mainPanel.move(ALL, 0, 1)
+            self.yoffset += 2
+            self.mainPanel.move(ALL, 0, 2)
         elif (self._y - event.y > 0):
-            self.yoffset -= 1
-            self.mainPanel.move(ALL, 0, -1)
+            self.yoffset -= 2
+            self.mainPanel.move(ALL, 0, -2)
         if (self._x - event.x < 0):
-            self.xoffset += 1
-            self.mainPanel.move(ALL, 1, 0)
+            self.xoffset += 2
+            self.mainPanel.move(ALL, 2, 0)
         elif (self._x - event.x > 0):
-            self.xoffset -= 1
-            self.mainPanel.move(ALL, -1, 0)
+            self.xoffset -= 2
+            self.mainPanel.move(ALL, -2, 0)
 
         self._x = event.x
         self._y = event.y

@@ -73,6 +73,7 @@ class LabelTool():
 
         #popup windows
         self.top = None
+        self.pkg = None
         self.endview= None # end of directory popup
         self.video_processing_window = None #inactive video processing popup
 
@@ -407,9 +408,10 @@ class LabelTool():
         self.loadDir()
        
     def upload(self):
-        pkg = filePackage(self.imageDir)
-        thrd =Thread(target=pkg.doCompression)
-        thrd.start()
+        if not self.pkg:
+            self.pkg = filePackage(self.imageDir)
+            self.pkg.doCompression()
+          #  thrd.start()
         
 
 #main
