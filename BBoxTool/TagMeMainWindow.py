@@ -243,11 +243,12 @@ class mainwindow():
             if event.num == 4 or event.delta == 120:
                 self.scale *= 1.1
                 self.mainPanel.scale(ALL, self.xoffset, self.yoffset, 1.1, 1.1)
+                self.redraw()
         if event.num == 5 or event.delta == -120:
             self.scale *= 0.9
             self.mainPanel.scale(ALL,self.xoffset, self.yoffset, 0.9, 0.9)
-
-        self.redraw()
+            self.redraw()
+       
 
     def redraw(self, x=0, y=0):
         if self.img_id:
