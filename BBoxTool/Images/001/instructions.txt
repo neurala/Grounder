@@ -1,9 +1,9 @@
-Version 1.0.0
+Version 0.6.0
 PLEASE READ BEFORE PROCEEDING
 
 1) Click on 'Load directory'.
   Go to a directory and click on an image.
-  All images to be tagged must be in the same folder. 
+  All images to be tagged must be in the same folder.
   However, when finished with one directory, you will be prompted to start a new project in a different directory.
 
 2) Enter your labels.
