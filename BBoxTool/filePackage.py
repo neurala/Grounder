@@ -4,7 +4,7 @@ import webbrowser
 from Tkinter import *
 from threading import Thread
 class filePackage():
-    
+
     def __init__(self, directory):
         self.origindir = directory
         self.targetOutput = os.path.abspath(os.path.join(self.origindir, ".."))
@@ -24,6 +24,7 @@ class filePackage():
         self.confirmbtn.pack(fill="x")
         self.cancelbtn = Button(self.confirmView, text="No I'll do it later",command=self.confirmView.destroy)
         self.cancelbtn.pack(fill="x")
+        self.center(warning)
 
     def doCompression(self):
         self.confirmView.destroy()
@@ -67,4 +68,3 @@ class filePackage():
         x = w / 2 - size[0] / 2
         y = h / 2 - size[1] / 2
         toplevel.geometry("%dx%d+%d+%d" % (size + (x, y)))
-
