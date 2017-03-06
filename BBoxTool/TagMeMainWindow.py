@@ -181,7 +181,7 @@ class mainwindow():
 
     def mouseMove(self, event):
         self.disp.config(text = 'x: %d, y: %d' %(event.x, event.y))
-        # self.mainPanel.focus_set()
+        self.mainPanel.focus_set()
         if self.tkimg:
             if self.hl:
                 self.mainPanel.delete(self.hl)
