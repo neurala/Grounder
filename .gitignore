@@ -4,3 +4,4 @@ release
 .kdev4
 *.kdev4
 Examples
+*.txt~

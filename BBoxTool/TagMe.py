@@ -410,7 +410,6 @@ class LabelTool():
     def upload(self):
         if not self.pkg:
             self.pkg = filePackage(self.imageDir)
-            self.pkg.doCompression()
           #  thrd.start()
         
 

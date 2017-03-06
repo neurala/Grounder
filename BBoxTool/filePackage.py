@@ -4,6 +4,7 @@ import webbrowser
 from Tkinter import *
 from threading import Thread
 class filePackage():
+    
     def __init__(self, directory):
         self.origindir = directory
         self.targetOutput = os.path.abspath(os.path.join(self.origindir, ".."))
@@ -12,7 +13,20 @@ class filePackage():
         self.upload_button = None
         self.compressview = None
         self.thread = None
+        self.confirm()
+
+    def confirm(self):
+        self.confirmView = Toplevel()
+        self.confirmView.title("COMPRESSING")
+        warning = Message(self.confirmView,text="THIS OPERATION IS TIME CONSUMING \nThis operation could take a very long time, are you sure you want to continue?", bg="white" , aspect=500)
+        warning.pack()
+        self.confirmbtn = Button(self.confirmView, text="Yes I can wait",command=self.doCompression)
+        self.confirmbtn.pack(fill="x")
+        self.cancelbtn = Button(self.confirmView, text="No I'll do it later",command=self.confirmView.destroy)
+        self.cancelbtn.pack(fill="x")
+
     def doCompression(self):
+        self.confirmView.destroy()
         self.compressview = Toplevel()
         self.compressview.protocol('WM_DELETE_WINDOW',self.close)
         if(os.name =='nt'):
@@ -24,6 +38,7 @@ class filePackage():
         self.text.pack()
         self.thread = Thread(target=self.comp)
         self.thread.start()
+
     def comp(self):
          shutil.make_archive(os.path.join(self.targetOutput,os.path.dirname(self.origindir)+"_package"), 'zip', self.origindir)
          self.text.config(text="compression complete! file saved to: \n"+self.targetOutput)
