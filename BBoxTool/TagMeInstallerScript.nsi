@@ -12,7 +12,7 @@
 !define DESCRIPTION "A tool to tag objects of interest for Neural Network Training"
 # These three must be integers
 !define VERSIONMAJOR 0
-!define VERSIONMINOR 3
+!define VERSIONMINOR 6
 !define VERSIONBUILD 0
 # These will be displayed by the "Click here for support information" link in "Add/Remove Programs"
 # It is possible to use "mailto:" links in here to open the email client
@@ -31,7 +31,7 @@ LicenseData "license.rtf"
 # This will be in the installer/uninstaller's title bar
 Name "${COMPANYNAME} - ${APPNAME}"
 Icon "logo.ico"
-outFile "TagMeRC3Installer.exe"
+outFile "TagMeInstaller0_6_0.exe"
 
 !include LogicLib.nsh
 
@@ -59,7 +59,7 @@ section "install"
 	# Files for the install directory - to build the installer, these should be in the same directory as the install script (this file)
 	setOutPath $INSTDIR
 	# Files added here should be removed by the uninstaller (see section "uninstall")
-	File /r "TagMeRC3Windows64"
+	File /r "TagMeWindows64"
 	File "logo.ico"
 	# Add any other files for the install directory (license files, app data, etc) here
 
@@ -87,8 +87,8 @@ section "install"
 sectionEnd
 
 Section "Desktop Shortcut"
-  SetOutPath "$INSTDIR\TagMeRC3Windows64"
-  createShortCut "$DESKTOP\${APPNAME}.lnk" "$INSTDIR\TagMeRC3Windows64\TagMe.exe" "" "$INSTDIR\logo.ico"
+  SetOutPath "$INSTDIR\TagMeWindows64"
+  createShortCut "$DESKTOP\${APPNAME}.lnk" "$INSTDIR\TagMeWindows64\TagMe.exe" "" "$INSTDIR\logo.ico"
 SectionEnd
 # Uninstaller
 
