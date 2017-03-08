@@ -1,5 +1,5 @@
 from __future__ import division
-
+from ResetTimer import TimerReset
 from Tkinter import *
 import tkFileDialog as filedialog
 from PIL import Image, ImageTk
@@ -13,6 +13,8 @@ import subprocess
 BASE = RAISED
 SELECTED = FLAT
 COLORS = ['red', 'peru', 'DarkOrange1', 'green', 'green3', 'DarkSlateGray4', 'blue', 'cyan', 'orchid1', 'maroon4'] #max of 10 classes for now
+TIMEOUT = 0.1
+timer = None
 # image sizes for the examples
 SIZE = 256, 256
 
@@ -239,18 +241,30 @@ class mainwindow():
 
     def zoom(self, event):
         # self.mainPanel.move(ALL, -self.xoffset, -self.yoffset)
+
         if(self.scale < 3.0): #hard limit of 3x zoom to avoid excessive memory usage
             if event.num == 4 or event.delta == 120:
                 self.scale *= 1.1
                 self.mainPanel.scale(ALL, self.xoffset, self.yoffset, 1.1, 1.1)
-                self.redraw()
+                self.asyncRedraw()
         if event.num == 5 or event.delta == -120:
             self.scale *= 0.9
             self.mainPanel.scale(ALL,self.xoffset, self.yoffset, 0.9, 0.9)
-            self.redraw()
+            self.asyncRedraw()
+
+    def asyncRedraw(self):
+        global timer
+        if timer is None:
+            timer = TimerReset(TIMEOUT, self.redraw)
+            timer.start()
+        else:
+            if(timer.finished.isSet()):
+                timer = TimerReset(TIMEOUT, self.redraw)
+                timer.start()
+            timer.reset()
 
 
-    def redraw(self, x=0, y=0): #this could use some improvement
+    def redraw(self, x=0, y=0):
         if self.img_id:
             self.mainPanel.delete(self.img_id)
         iw, ih = self.orig_img.size
