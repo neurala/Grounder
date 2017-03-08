@@ -114,7 +114,8 @@ class LabelTool():
         self.center(self.mainPanel.frame,False)
         self.center(self.parent,True)
         self.nostartup = 1
-        if not os.path.exists(os.path.join(os.getenv("HOME"), "TagMecache.txt")):
+
+        if not os.path.exists(os.path.join( os.path.expanduser("~"), "TagMecache.txt")):
             self.nostartup=0
             self.showhelp()
 
@@ -155,7 +156,7 @@ class LabelTool():
         helpview.lift()
 
     def cache(self):
-        with open(os.path.join(os.getenv("HOME"), "TagMecache.txt"), 'w') as f:
+        with open(os.path.join( os.path.expanduser("~"), "TagMecache.txt"), 'w') as f:
             f.write("nohelp")
 
 #display the end of directory popup message
@@ -406,12 +407,12 @@ class LabelTool():
         self.endview = None
         self.ldBtn.config(state=NORMAL, bg='red')
         self.loadDir()
-       
+
     def upload(self):
         if not self.pkg:
             self.pkg = filePackage(self.imageDir)
           #  thrd.start()
-        
+
 
 #main
 if __name__ == '__main__':

@@ -248,9 +248,9 @@ class mainwindow():
             self.scale *= 0.9
             self.mainPanel.scale(ALL,self.xoffset, self.yoffset, 0.9, 0.9)
             self.redraw()
-       
 
-    def redraw(self, x=0, y=0):
+
+    def redraw(self, x=0, y=0): #this could use some improvement
         if self.img_id:
             self.mainPanel.delete(self.img_id)
         iw, ih = self.orig_img.size

@@ -54,6 +54,14 @@ function .onInit
 	setShellVarContext all
 	!insertmacro VerifyUserIsAdmin
 functionEnd
+Section -Prerequisites
+  SetOutPath $INSTDIR\Prerequisites
+  MessageBox MB_YESNO "Install Microsoft C++ 208 redistributable?" /SD IDYES IDNO endredist
+    File "vcredist_x86.exe"
+    ExecWait "$INSTDIR\Prerequisites\vcredist_x86.exe"
+    Goto endredist
+  endredist:
+SectionEnd
 
 section "install"
 	# Files for the install directory - to build the installer, these should be in the same directory as the install script (this file)
