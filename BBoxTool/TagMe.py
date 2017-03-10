@@ -206,7 +206,7 @@ class LabelTool():
 #opens popup and loads selected directory of images
     def loadDir(self, dbg=False):
         #open dialog box to select data, allow only image files
-        filepath = os.path.realpath(filedialog.askopenfilename(filetypes=[('data','.jpg .png .JPEG .PNG')]))
+        filepath = os.path.realpath(filedialog.askopenfilename(filetypes=[('data','.jpg .png .JPEG .PNG .JPG')]))
 
         folder_path = os.path.dirname(filepath)
         filename = os.path.basename(filepath)
@@ -221,6 +221,8 @@ class LabelTool():
             self.imageList = glob.glob(os.path.join(self.imageDir, '*.png'))
         if len(self.imageList) == 0:
             self.imageList = glob.glob(os.path.join(self.imageDir, '*.PNG'))
+        if len(self.imageList) == 0:
+            self.imageList = glob.glob(os.path.join(self.imageDir, '*.JPG'))
         if len(self.imageList) == 0:
             print 'No images found in the specified dir!'
             return
