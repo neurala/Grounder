@@ -44,6 +44,8 @@ class LabelTool():
         if(os.name =='nt'):
             iconpath = os.path.realpath("./Images/001/logo.ico")
             self.parent.iconbitmap(iconpath)
+
+        self.parent.protocol('WM_DELETE_WINDOW', self.shutdown)  # root is your root window
         # initialize global state
         self.imageDir = ''
         self.imageList= []
@@ -232,9 +234,10 @@ class LabelTool():
         self.total = len(self.imageList)
          # set up output dir
         self.outDir = os.path.join(r'%s' %(self.imageDir),'Labels')
-        if not os.path.exists(self.outDir):
+        if not os.path.exists(os.path.join(self.outDir,"labels.txt")):
             print 'no classes found, creating...'
-            os.mkdir(self.outDir)
+            if not os.path.exists(self.outDir):
+                os.mkdir(self.outDir)
             for labels in self.classlist:
                 labels.config(bg='yellow',state=NORMAL)
             self.labelsave.config(bg='green', state=NORMAL)
@@ -414,6 +417,14 @@ class LabelTool():
         if not self.pkg:
             self.pkg = filePackage(self.imageDir)
           #  thrd.start()
+    def shutdown(self):
+        if os.path.exists(os.path.join(self.outDir, "labels.txt")):
+            if os.stat(os.path.join(self.outDir, "labels.txt")).st_size == 0:
+                shutil.rmtree(self.outDir)
+                print "deleted"+self.outDir
+        self.parent.destroy()
+
+
 
 
 #main

@@ -290,25 +290,34 @@ class mainwindow():
 
     def drag(self, event):
         if (self._y - event.y < 0):
-            self.yoffset += 2
-            self.mainPanel.move(ALL, 0, 2)
+            self.yoffset += 3
+            self.mainPanel.move(ALL, 0, 3)
         elif (self._y - event.y > 0):
-            self.yoffset -= 2
-            self.mainPanel.move(ALL, 0, -2)
+            self.yoffset -= 3
+            self.mainPanel.move(ALL, 0, -3)
         if (self._x - event.x < 0):
-            self.xoffset += 2
-            self.mainPanel.move(ALL, 2, 0)
+            self.xoffset += 3
+            self.mainPanel.move(ALL, 3, 0)
         elif (self._x - event.x > 0):
-            self.xoffset -= 2
-            self.mainPanel.move(ALL, -2, 0)
+            self.xoffset -= 3
+            self.mainPanel.move(ALL, -3, 0)
 
         self._x = event.x
         self._y = event.y
 
     def loadImage(self,imagepath):
         self.img = Image.open(imagepath)
-        self.tkimg = ImageTk.PhotoImage(self.img)
+
+        iw, ih = self.img.size
+        ratio = float(iw / ih)
+        size = int(1920), int(1920 / ratio)
+        if iw > 1920:
+            self.img = self.img.resize(size, Image.ANTIALIAS) # resize it
+            self.img = self.img.convert("P", dither=Image.NONE, palette=Image.ADAPTIVE)
         self.orig_img = self.img
+
+        self.tkimg = ImageTk.PhotoImage(self.img)
+
         if self.tkimg.width() < 640:
             self.scale = 1.0
         else:
@@ -321,4 +330,4 @@ class mainwindow():
 
 
     def shutdown(self):
-        self.parent.parent.destroy() #close out and exit application
+        self.parent.shutdown() #close out and exit application
