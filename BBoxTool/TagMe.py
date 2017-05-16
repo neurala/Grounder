@@ -15,6 +15,7 @@ from PIL import Image, ImageTk
 import time
 import os
 import glob
+import fnmatch
 import csv
 import subprocess
 
@@ -216,15 +217,18 @@ class LabelTool():
 
         self.imageDir = folder_path
 
-        self.imageList = glob.glob(os.path.join(self.imageDir, '*.JPEG'))
-        if len(self.imageList) == 0:
-            self.imageList = glob.glob(os.path.join(self.imageDir, '*.jpg'))
-        if len(self.imageList) == 0:
-            self.imageList = glob.glob(os.path.join(self.imageDir, '*.png'))
-        if len(self.imageList) == 0:
-            self.imageList = glob.glob(os.path.join(self.imageDir, '*.PNG'))
-        if len(self.imageList) == 0:
-            self.imageList = glob.glob(os.path.join(self.imageDir, '*.JPG'))
+        for file in os.listdir(folder_path):
+            if fnmatch.fnmatch(file, '*.jpg'):
+                self.imageList.append(self.imageDir + "/" + file)
+            elif fnmatch.fnmatch(file, '*.JPEG'):
+                self.imageList.append(self.imageDir + "/" + file)
+            elif fnmatch.fnmatch(file, '*.JPG'):
+                self.imageList.append(self.imageDir + "/" + file)
+            elif fnmatch.fnmatch(file, '*.png'):
+                self.imageList.append(self.imageDir + "/" + file)
+            elif fnmatch.fnmatch(file, '*.PNG'):
+                self.imageList.append(self.imageDir + "/" + file)
+
         if len(self.imageList) == 0:
             print 'No images found in the specified dir!'
             return
